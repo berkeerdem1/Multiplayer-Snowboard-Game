@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class CameraFollow : MonoBehaviour
 {
-    public Transform target; // Takip edilecek araç
+    Transform target; // Takip edilecek arac
     public Vector3 offset = new Vector3(0, 5, -10); // Kameranýn arabaya göre sabit pozisyonu
     public float followSpeed = 10f; // Pozisyon takip hýzý
     public float heightLock = 5f; // Kameranýn sabit yükseklik deðeri
@@ -20,7 +20,20 @@ public class CameraFollow : MonoBehaviour
     }
     private void LateUpdate()
     {
-        if (target == null) return;
+        if(target == null)
+        {
+            //GameObject potentialTarget = GameObject.Find("Snowboard(Clone)"); // "Player" tagine sahip objeyi ara
+            //if (potentialTarget != null)
+            //{
+            //    target = potentialTarget.transform; // Bulunan hedefi atayýn
+            //}
+            //else
+            //{
+            //    return; // Hedef bulunamazsa çýk
+            //}
+            return;
+        }
+        
 
         // Kameranýn hedef pozisyonunu hesapla
         Vector3 desiredPosition = target.position + target.rotation * offset;

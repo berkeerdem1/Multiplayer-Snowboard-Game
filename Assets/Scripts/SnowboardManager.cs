@@ -1,8 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Netcode;
 using UnityEngine;
 
-public class SnowboardManager : MonoBehaviour
+public class SnowboardManager : NetworkBehaviour
 {
     public Transform frontPoint;
     public float acceleration = 500f; // Ýleri/Geri baþlangýç kuvveti
@@ -19,14 +20,58 @@ public class SnowboardManager : MonoBehaviour
     private Rigidbody rb; // RigidBody referansý
     private float throttle = 0f; // Hýzlanma faktörü
 
+
+    [SerializeField] private GameObject spawnObjectPrefab;
+    private GameObject spawnObject;
+
+    private NetworkVariable<float> randomFloatNumber = new NetworkVariable<float>(5.5f, 
+                                                                                NetworkVariableReadPermission.Everyone,
+                                                                                NetworkVariableWritePermission.Owner);
+
+    public override void OnNetworkSpawn() // Netcode'un start'i
+    {
+    }
     private void Start()
     {
         rb = GetComponent<Rigidbody>();
         InvokeRepeating("Movement", 0, 0.02f);
     }
 
+    private void Update()
+    {
+        if (Input.GetKey(KeyCode.Space))
+        {
+            rb.velocity *= (1f - brakeForce * Time.fixedDeltaTime);
+        }
+
+        if (Input.GetKey(KeyCode.J))
+        {
+            if(spawnObjectPrefab != null)
+            {
+                spawnObject = Instantiate(spawnObjectPrefab);
+                spawnObject.GetComponent<NetworkObject>().Spawn();  // Netcode'da obje spawnlar                                                                
+            }
+            //TestingServerRpc();
+            //randomFloatNumber.Value = Random.Range(0, 100);
+        }
+
+        if (Input.GetKey(KeyCode.G))
+        {
+            if (spawnObjectPrefab != null)
+            {
+                spawnObject.GetComponent<NetworkObject>().Despawn();  // Netcode'da spawnlanan objeyi yok eder
+                Destroy(spawnObject);
+            }
+            //TestingServerRpc();
+            //randomFloatNumber.Value = Random.Range(0, 100);
+        }
+    }
+
     private void Movement()
     {
+        if (!IsOwner)
+            return;
+
         // 1. Kullanýcý girdilerini al
         float moveInput = Input.GetAxis("Vertical"); // Ýleri/Geri hareket
         float turnInput = Input.GetAxis("Horizontal"); // Saða/Sola dönüþ
@@ -65,10 +110,7 @@ public class SnowboardManager : MonoBehaviour
         // 5. Sürüklenme efekti
         rb.velocity *= drag;
 
-        if (Input.GetKey(KeyCode.Space))
-        {
-            rb.velocity *= (1f - brakeForce * Time.fixedDeltaTime);
-        }
+        
 
         if (Vector3.Dot(transform.up, Vector3.up) < 0.5f && isGrounded) // Araba yaklaþýk olarak ters dönmüþse
         {
@@ -100,5 +142,18 @@ public class SnowboardManager : MonoBehaviour
     {
         isGrounded = false; // Çarpýþma sona erdiðinde yere temas kesilir
     }
+
+    [ServerRpc]
+    private void TestingServerRpc()  // Host sahibiyse konsola yazar
+    {
+        Debug.Log(OwnerClientId + " Testing Server Rpc");
+    }
+
+    [ClientRpc]
+    private void TestingClientRpc() // Client'se konsola yazar
+    {
+        Debug.Log(OwnerClientId + " Testing Client Rpc");
+    }
+
 }
 

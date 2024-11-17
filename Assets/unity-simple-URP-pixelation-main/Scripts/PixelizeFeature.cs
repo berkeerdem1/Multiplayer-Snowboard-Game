@@ -13,7 +13,12 @@ public class PixelizeFeature : ScriptableRendererFeature
         public int screenHeight = 144;
     }
 
-    [SerializeField] private CustomPassSettings settings;
+    [SerializeField]
+    private CustomPassSettings settings = new CustomPassSettings
+    {
+        renderPassEvent = RenderPassEvent.BeforeRenderingPostProcessing,
+        screenHeight = 256
+    };
     private PixelizePass customPass;
 
     public override void Create()
