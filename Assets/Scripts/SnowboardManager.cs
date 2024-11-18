@@ -16,7 +16,8 @@ public class SnowboardManager : NetworkBehaviour
     public float brakeForce = 0.2f;
     public bool isGrounded = false;
 
-
+    [SerializeField] private GameObject CameraPrefab;
+    private GameObject playerCamera;
     private Rigidbody rb; // RigidBody referansý
     private float throttle = 0f; // Hýzlanma faktörü
 
@@ -30,6 +31,11 @@ public class SnowboardManager : NetworkBehaviour
 
     public override void OnNetworkSpawn() // Netcode'un start'i
     {
+        if (IsOwner)
+        {
+            playerCamera = Instantiate(CameraPrefab); // Kamera prefab'ýný oluþtur
+            playerCamera.GetComponent<CameraFollow>().SetTarget(transform); // Player'ý takip et
+        }
     }
     private void Start()
     {
@@ -44,27 +50,27 @@ public class SnowboardManager : NetworkBehaviour
             rb.velocity *= (1f - brakeForce * Time.fixedDeltaTime);
         }
 
-        if (Input.GetKey(KeyCode.J))
-        {
-            if(spawnObjectPrefab != null)
-            {
-                spawnObject = Instantiate(spawnObjectPrefab);
-                spawnObject.GetComponent<NetworkObject>().Spawn();  // Netcode'da obje spawnlar                                                                
-            }
-            //TestingServerRpc();
-            //randomFloatNumber.Value = Random.Range(0, 100);
-        }
+        //if (Input.GetKey(KeyCode.J))
+        //{
+        //    if(spawnObjectPrefab != null)
+        //    {
+        //        spawnObject = Instantiate(spawnObjectPrefab);
+        //        spawnObject.GetComponent<NetworkObject>().Spawn();  // Netcode'da obje spawnlar                                                                
+        //    }
+        //    //TestingServerRpc();
+        //    //randomFloatNumber.Value = Random.Range(0, 100);
+        //}
 
-        if (Input.GetKey(KeyCode.G))
-        {
-            if (spawnObjectPrefab != null)
-            {
-                spawnObject.GetComponent<NetworkObject>().Despawn();  // Netcode'da spawnlanan objeyi yok eder
-                Destroy(spawnObject);
-            }
-            //TestingServerRpc();
-            //randomFloatNumber.Value = Random.Range(0, 100);
-        }
+        //if (Input.GetKey(KeyCode.G))
+        //{
+        //    if (spawnObjectPrefab != null)
+        //    {
+        //        spawnObject.GetComponent<NetworkObject>().Despawn();  // Netcode'da spawnlanan objeyi yok eder
+        //        Destroy(spawnObject);
+        //    }
+        //    //TestingServerRpc();
+        //    //randomFloatNumber.Value = Random.Range(0, 100);
+        //}
     }
 
     private void Movement()
@@ -155,5 +161,12 @@ public class SnowboardManager : NetworkBehaviour
         Debug.Log(OwnerClientId + " Testing Client Rpc");
     }
 
+    private void OnDestroy()
+    {
+        if (IsOwner && playerCamera != null)
+        {
+            Destroy(playerCamera); // Oyuncu ayrýldýðýnda kamerayý yok et
+        }
+    }
 }
 

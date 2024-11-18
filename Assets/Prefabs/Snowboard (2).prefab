@@ -149,7 +149,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  GlobalObjectIdHash: 1162614372
+  GlobalObjectIdHash: 1910382958
   AlwaysReplicateAsRoot: 0
   SynchronizeTransform: 1
   ActiveSceneSynchronization: 0
@@ -179,6 +179,7 @@ MonoBehaviour:
   throttleDecreaseRate: 5
   brakeForce: 3
   isGrounded: 0
+  CameraPrefab: {fileID: 8069668948580143406, guid: c8bdcafd803de1a448883b8a2d70acb9, type: 3}
   spawnObjectPrefab: {fileID: 0}
 --- !u!114 &2819568545709315255
 MonoBehaviour:

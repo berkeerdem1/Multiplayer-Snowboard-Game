@@ -18,6 +18,12 @@ public class CameraFollow : MonoBehaviour
     {
         Application.targetFrameRate = -1;
     }
+
+    public void SetTarget(Transform newTarget)
+    {
+        target = newTarget;
+    }
+
     private void LateUpdate()
     {
         if(target == null)

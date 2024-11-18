@@ -152,6 +152,7 @@ MonoBehaviour:
   throttleDecreaseRate: 5
   brakeForce: 3
   isGrounded: 0
+  CameraPrefab: {fileID: 8069668948580143406, guid: c8bdcafd803de1a448883b8a2d70acb9, type: 3}
   spawnObjectPrefab: {fileID: 3268744512431480017, guid: d55a602699482dd4c8b0cb1ef3d84f6f, type: 3}
 --- !u!54 &8718511567798672697
 Rigidbody:
