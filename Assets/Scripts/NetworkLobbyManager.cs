@@ -15,13 +15,13 @@ public class NetworkLobbyManager : MonoBehaviour
     public void StartHost()
     {
         relayManager.CreateRelay();
-        NetworkManager.Singleton.StartHost();
+        //NetworkManager.Singleton.StartHost();
         Debug.Log("Host started.");
     }
 
     public void StartClient()
     {
-        NetworkManager.Singleton.StartClient();
+        //NetworkManager.Singleton.StartClient();
         Debug.Log("Client started.");
     }
 }

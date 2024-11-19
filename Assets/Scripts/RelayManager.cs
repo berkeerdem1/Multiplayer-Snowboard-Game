@@ -5,10 +5,13 @@ using Unity.Netcode.Transports.UTP;
 using UnityEngine;
 using Unity.Services.Core; // Unity Services'ý baþlatmak için
 using Unity.Services.Authentication;
-using System; // Oyun oturumlarýný kimlik doðrulamasý ile baþlatmak için
+using System;
+using UnityEngine.UI; // Oyun oturumlarýný kimlik doðrulamasý ile baþlatmak için
 
 public class RelayManager : MonoBehaviour
 {
+    [SerializeField] private Text joinCodeText;
+    [SerializeField] private GameObject otherButtonsPanel;
     private async void Start()
     {
         await UnityServices.InitializeAsync();
@@ -41,12 +44,23 @@ public class RelayManager : MonoBehaviour
                 allocation.ConnectionData
             );
 
+            if (NetworkManager.Singleton.IsConnectedClient || NetworkManager.Singleton.IsHost)
+            {
+                NetworkManager.Singleton.Shutdown();
+            }
+
             NetworkManager.Singleton.StartHost();
+
+            
+
+            joinCodeText.text = joinCode.ToString();
         }
         catch(RelayServiceException e)
         {
             Debug.Log(e);
         }
+
+        otherButtonsPanel.SetActive(false);
     }
 
     public async void JoinRelay(string joinCode)
@@ -69,6 +83,11 @@ public class RelayManager : MonoBehaviour
                 joinAllLocation.HostConnectionData
             );
 
+            if (NetworkManager.Singleton.IsConnectedClient || NetworkManager.Singleton.IsHost)
+            {
+                NetworkManager.Singleton.Shutdown();
+            }
+
             NetworkManager.Singleton.StartClient();
 
             Debug.Log("Successfully joined the game!");
@@ -77,6 +96,8 @@ public class RelayManager : MonoBehaviour
         {
             Debug.LogError("Failed to join the game. Reason: " + e.Message);
         }
+
+        otherButtonsPanel.SetActive(false);
     }
 }
 
