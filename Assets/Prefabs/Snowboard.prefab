@@ -17,6 +17,7 @@ GameObject:
   - component: {fileID: 8718511567798672697}
   - component: {fileID: 4992300800424620240}
   - component: {fileID: 3068260436775547895}
+  - component: {fileID: 2425035917866585724}
   m_Layer: 0
   m_Name: Snowboard
   m_TagString: Untagged
@@ -228,6 +229,18 @@ MonoBehaviour:
   nicknameText: {fileID: 3664911808016128742}
   player: {fileID: 4067416202623740186}
   offset: {x: 0, y: 0, z: 0}
+--- !u!114 &2425035917866585724
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2239015115121053838}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f805f136e95f59c4e803cedb22336fc3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &6052181555788308121
 GameObject:
   m_ObjectHideFlags: 0

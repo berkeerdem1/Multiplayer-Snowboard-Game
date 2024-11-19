@@ -33,6 +33,9 @@ public class PlayerNicknameDisplay : NetworkBehaviour
         {
             nicknameText.gameObject.SetActive(false); // Kendi nickname'ini gizle
             SetNickname(); // Kendi nickname'ini ayarla
+
+            string nickname = Nickname_Manager.Instance.nickname; // Oyuncunun nickname'ini al
+            PlayerManager.Instance.AddPlayerNickname(nickname);   // Listeye ekle
         }
 
         playerNickname.OnValueChanged += OnNicknameChanged;

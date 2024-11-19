@@ -4,8 +4,8 @@ using UnityEngine;
 
 public class Skybox_Rotator : MonoBehaviour
 {
-    public Material skyboxMaterial; // Skybox Material'in referansý
-    public float rotationSpeed = 1.0f; // Rotasyon hýzý (derece/saniye)
+    public Material skyboxMaterial; 
+    public float rotationSpeed = 1.0f; 
 
     private void Start()
     {
@@ -15,11 +15,9 @@ public class Skybox_Rotator : MonoBehaviour
     {
         if (skyboxMaterial != null)
         {
-            // Mevcut rotasyon deðerini al ve artýr
             float currentRotation = skyboxMaterial.GetFloat("_Rotation");
             currentRotation += rotationSpeed * Time.deltaTime;
 
-            // Yeni rotasyon deðerini skybox material'e uygula
             skyboxMaterial.SetFloat("_Rotation", currentRotation);
         }
     }

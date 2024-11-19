@@ -51,8 +51,6 @@ public class RelayManager : MonoBehaviour
 
             NetworkManager.Singleton.StartHost();
 
-            
-
             joinCodeText.text = joinCode.ToString();
         }
         catch(RelayServiceException e)
@@ -91,6 +89,8 @@ public class RelayManager : MonoBehaviour
             NetworkManager.Singleton.StartClient();
 
             Debug.Log("Successfully joined the game!");
+
+            joinCodeText.text = joinCode.ToString();
         }
         catch (RelayServiceException e)
         {
