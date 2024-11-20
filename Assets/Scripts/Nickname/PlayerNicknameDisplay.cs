@@ -35,7 +35,7 @@ public class PlayerNicknameDisplay : NetworkBehaviour
             SetNickname(); // Kendi nickname'ini ayarla
 
             string nickname = Nickname_Manager.Instance.nickname; // Oyuncunun nickname'ini al
-            PlayerManager.Instance.AddPlayerNickname(nickname);   // Listeye ekle
+            PlayersNickname_Controller.Instance.AddPlayerNickname(nickname);   // Listeye ekle
 
             // Kendi nickname'ini "(You)" olarak ayarla
             nicknameText.text = $"{nickname} (You)";
@@ -77,9 +77,9 @@ public class PlayerNicknameDisplay : NetworkBehaviour
     private void SubmitNicknameToServerRpc(string nickname)
     {
         // Sunucu tarafýnda PlayerManager'a ekle
-        if (PlayerManager.Instance != null)
+        if (PlayersNickname_Controller.Instance != null)
         {
-            PlayerManager.Instance.AddPlayerNickname(nickname);
+            PlayersNickname_Controller.Instance.AddPlayerNickname(nickname);
         }
     }
 }

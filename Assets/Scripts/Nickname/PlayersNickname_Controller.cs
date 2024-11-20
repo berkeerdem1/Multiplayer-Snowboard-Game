@@ -5,11 +5,11 @@ using Unity.Netcode;
 using Unity.Collections;
 using Unity.Services.Authentication;
 
-public class PlayerManager : NetworkBehaviour
+public class PlayersNickname_Controller : NetworkBehaviour
 {
     private NetworkList<FixedString32Bytes> playerNicknames = new NetworkList<FixedString32Bytes>();
 
-    public static PlayerManager Instance;
+    public static PlayersNickname_Controller Instance;
 
     private void Awake()
     {

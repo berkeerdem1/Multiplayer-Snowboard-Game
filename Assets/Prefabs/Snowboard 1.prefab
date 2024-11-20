@@ -388,11 +388,13 @@ MonoBehaviour:
   acceleration: 500
   maxAcceleration: 2000
   steering: 100
-  maxSpeed: 30
+  maxSpeed: 50
   drag: 0.98
-  throttleIncreaseRate: 2
-  throttleDecreaseRate: 5
+  throttleIncreaseRate: 4
+  throttleDecreaseRate: 3
   brakeForce: 3
+  gravityScale: 10
+  groundCheckDistance: 2
   isGrounded: 0
   CameraPrefab: {fileID: 8069668948580143406, guid: c8bdcafd803de1a448883b8a2d70acb9, type: 3}
   spawnObjectPrefab: {fileID: 3268744512431480017, guid: d55a602699482dd4c8b0cb1ef3d84f6f, type: 3}

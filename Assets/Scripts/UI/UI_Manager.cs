@@ -35,13 +35,13 @@ public class UI_Manager : MonoBehaviour
 
     public void UpdateNicknamePanel()
     {
-        if (PlayerManager.Instance == null)
+        if (PlayersNickname_Controller.Instance == null)
         {
             Debug.Log("PlayerManager mevcut deðil, panel güncellenemedi!");
             return; 
         }
 
-        var nicknames = PlayerManager.Instance.GetAllNicknames();
+        var nicknames = PlayersNickname_Controller.Instance.GetAllNicknames();
 
         Debug.Log("Panel güncelleniyor. Nickname'ler:");
         foreach (var nickname in nicknames)

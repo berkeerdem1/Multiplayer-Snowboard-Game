@@ -8,11 +8,11 @@ public class CameraFollow : MonoBehaviour
     public Vector3 offset = new Vector3(0, 5, -10); // Kameranýn arabaya göre sabit pozisyonu
     public float followSpeed = 10f; // Pozisyon takip hýzý
     public float heightLock = 5f; // Kameranýn sabit yükseklik deðeri
-    private SnowboardManager snowboard;
+    private SnowboardController snowboard;
 
     private void Awake()
     {
-        snowboard = new SnowboardManager();
+        snowboard = new SnowboardController();
     }
     private void Start()
     {
