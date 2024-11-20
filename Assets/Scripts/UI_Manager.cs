@@ -14,6 +14,7 @@ public class UI_Manager : MonoBehaviour
 
     private List<GameObject> nicknameObjects = new List<GameObject>();
 
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -29,66 +30,53 @@ public class UI_Manager : MonoBehaviour
     private void Start()
     {
         nicknamePanel.SetActive(false);
-        InvokeRepeating(nameof(CheckAndUpdateNicknames), 0f, 5f); 
+        InvokeRepeating(nameof(UpdateNicknamePanel), 0f, 5f); // 5 saniyede bir paneli güncelle
     }
 
-    // Eksik nickname'leri ekler
-    private void CheckAndUpdateNicknames()
+    public void UpdateNicknamePanel()
     {
-        if (PlayerManager.Instance == null) return;
-
-        var allNicknames = PlayerManager.Instance.GetAllNicknames();
-
-        foreach (var nickname in allNicknames)
+        if (PlayerManager.Instance == null)
         {
-            // Eðer panelde bu nickname yoksa, ekle
-            if (!IsNicknameInPanel(nickname))
-            {
-                AddPlayerToList(nickname);
-            }
+            Debug.Log("PlayerManager mevcut deðil, panel güncellenemedi!");
+            return; 
         }
-    }
 
-    private bool IsNicknameInPanel(string nickname)
-    {
-        foreach (var obj in nicknameObjects)
+        var nicknames = PlayerManager.Instance.GetAllNicknames();
+
+        Debug.Log("Panel güncelleniyor. Nickname'ler:");
+        foreach (var nickname in nicknames)
         {
-            if (obj.GetComponent<Text>().text == nickname)
-            {
-                return true;
-            }
+            Debug.Log(nickname); // Panelde gösterilecek tüm nickname'leri kontrol et
         }
-        return false;
-    }
 
-
-    // Oyuncu listesini UI'ya ekleme
-    public void AddPlayerToList(string nickname)
-    {
-        // Yeni bir nickname UI'si oluþtur
-        GameObject newNickname = Instantiate(nicknamePrefab, nicknamePanel.transform);
-        newNickname.GetComponent<Text>().text = nickname; // Nickname'i ayarla
-        nicknameObjects.Add(newNickname);
-    }
-
-    public void UpdatePlayerListUI(NetworkList<FixedString32Bytes> nicknames)
-    {
-        // Eski nickname UI'larýný temizle
+        // Eski nickname'leri temizle
         foreach (var obj in nicknameObjects)
         {
             Destroy(obj);
         }
-
         nicknameObjects.Clear();
 
-        // Yeni nickname'ler için UI oluþtur
+        // Yeni nickname'leri ekle
         foreach (var nickname in nicknames)
         {
             GameObject newNickname = Instantiate(nicknamePrefab, nicknamePanel.transform);
-            newNickname.GetComponent<Text>().text = nickname.ToString();
+
+            // Eðer bu nickname oyuncunun kendisine aitse "(You)" ekle
+            if (nickname == Nickname_Manager.Instance.nickname)
+            {
+                newNickname.GetComponent<Text>().text = $"{nickname} (You)";
+            }
+            else
+            {
+                newNickname.GetComponent<Text>().text = nickname;
+            }
+
             nicknameObjects.Add(newNickname);
         }
+
+        Debug.Log($"Panelde toplam {nicknameObjects.Count} oyuncu gösteriliyor."); // Paneldeki toplam nickname sayýsýný yazdýr
     }
+
     public void ToggleNicknamePanel()
     {
         // Panelin aktiflik durumunu deðiþtir

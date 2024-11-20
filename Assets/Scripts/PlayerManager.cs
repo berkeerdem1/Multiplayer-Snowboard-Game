@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Unity.Netcode;
 using Unity.Collections;
+using Unity.Services.Authentication;
 
 public class PlayerManager : NetworkBehaviour
 {
@@ -22,12 +23,28 @@ public class PlayerManager : NetworkBehaviour
         }
     }
 
+    private void Start()
+    {
+        if (IsServer)
+        {
+            playerNicknames.OnListChanged += OnPlayerNicknamesChanged;
+            InvokeRepeating(nameof(CheckForNewPlayers), 0f, 5f); // 5 saniyede bir oyuncularý kontrol et
+        }
+    }
+
     public override void OnNetworkSpawn()
     {
         if (IsServer)
         {
-            // Oyuncular listeye eklendiðinde client'lara bilgi gönder
-            playerNicknames.OnListChanged += OnPlayerListChanged;
+        }
+    }
+
+    private void OnPlayerNicknamesChanged(NetworkListEvent<FixedString32Bytes> changeEvent)
+    {
+        // Nickname deðiþimlerini UI_Manager'a bildir
+        if (UI_Manager.Instance != null)
+        {
+            UI_Manager.Instance.UpdateNicknamePanel();
         }
     }
 
@@ -35,24 +52,46 @@ public class PlayerManager : NetworkBehaviour
     {
         if (IsServer)
         {
-            playerNicknames.Add(nickname); // Sunucu tarafýnda nickname'i listeye ekle
+            if (!playerNicknames.Contains(nickname))
+            {
+                playerNicknames.Add(nickname); // Sunucu tarafýnda listeye ekle
+                Debug.Log($"Nickname eklendi: {nickname}"); // Nickname ekleme iþlemini kontrol et
+            }
+            else
+            {
+                Debug.Log($"Nickname zaten mevcut: {nickname}"); // Eðer zaten eklenmiþse bilgi ver
+            }
         }
     }
 
-    private void OnPlayerListChanged(NetworkListEvent<FixedString32Bytes> changeEvent)
+    private void CheckForNewPlayers()
     {
-        // Client tarafýnda liste deðiþikliklerini iþleyin
-        UI_Manager.Instance.UpdatePlayerListUI(playerNicknames);
+        // Oyundaki tüm oyuncularý kontrol et
+        foreach (var player in FindObjectsOfType<PlayerNicknameDisplay>())
+        {
+            if (!playerNicknames.Contains(player.GetNickname()))
+            {
+                // Eðer oyuncu listede yoksa ekle
+                playerNicknames.Add(player.GetNickname());
+            }
+        }
     }
 
-    // Mevcut oyuncularýn listesini döndür
     public IEnumerable<string> GetAllNicknames()
     {
+        // Tüm oyuncu nicknamelerini döndür
         List<string> nicknames = new List<string>();
         foreach (var nickname in playerNicknames)
         {
             nicknames.Add(nickname.ToString());
         }
+
+        Debug.Log("Tüm nickname'ler:");
+        foreach (var name in nicknames)
+        {
+            Debug.Log(name); // Listeye eklenen tüm nickname'leri yazdýr
+        }
+
         return nicknames;
     }
 }

@@ -36,12 +36,17 @@ public class PlayerNicknameDisplay : NetworkBehaviour
 
             string nickname = Nickname_Manager.Instance.nickname; // Oyuncunun nickname'ini al
             PlayerManager.Instance.AddPlayerNickname(nickname);   // Listeye ekle
+
+            // Kendi nickname'ini "(You)" olarak ayarla
+            nicknameText.text = $"{nickname} (You)";
+
+            SubmitNicknameToServerRpc(nickname); // Sunucuya gönder
         }
 
         playerNickname.OnValueChanged += OnNicknameChanged;
 
         // Ýlk deðer deðiþikliði gerçekleþmemiþse bile nickname'i ayarla
-        if (!string.IsNullOrEmpty(playerNickname.Value.ToString()))
+        if (!string.IsNullOrEmpty(playerNickname.Value.ToString()) && !IsOwner)
         {
             nicknameText.text = playerNickname.Value.ToString();
         }
@@ -54,8 +59,27 @@ public class PlayerNicknameDisplay : NetworkBehaviour
         playerNickname.Value = nickname;
     }
 
+    public FixedString32Bytes GetNickname()
+    {
+        return playerNickname.Value; // Oyuncunun nickname'ini döndür
+    }
+
     private void OnNicknameChanged(FixedString32Bytes oldValue, FixedString32Bytes newValue)
     {
-        nicknameText.text = newValue.ToString(); // Nickname UI'ya aktar
+        // Eðer kendinin deðilse sadece ismi göster
+        if (!IsOwner)
+        {
+            nicknameText.text = newValue.ToString();
+        }
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void SubmitNicknameToServerRpc(string nickname)
+    {
+        // Sunucu tarafýnda PlayerManager'a ekle
+        if (PlayerManager.Instance != null)
+        {
+            PlayerManager.Instance.AddPlayerNickname(nickname);
+        }
     }
 }
