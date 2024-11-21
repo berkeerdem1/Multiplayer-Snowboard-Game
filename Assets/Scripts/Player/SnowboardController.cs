@@ -28,7 +28,6 @@ public class SnowboardController : NetworkBehaviour
     private GameObject playerCamera;
     private Rigidbody rb; // RigidBody referansý
     private GameObject spawnObject;
-    private TrailRenderer trail;
 
     private NetworkVariable<float> randomFloatNumber = new NetworkVariable<float>(5.5f, 
                                                                                 NetworkVariableReadPermission.Everyone,
@@ -46,8 +45,6 @@ public class SnowboardController : NetworkBehaviour
     private void Start()
     {
         rb = GetComponent<Rigidbody>();
-        trail = GetComponent<TrailRenderer>();
-        trail.startWidth = 2f;
         InvokeRepeating("Movement", 0, 0.02f);
     }
 
@@ -65,21 +62,6 @@ public class SnowboardController : NetworkBehaviour
         {
             rb.velocity *= (1f - brakeForce * Time.fixedDeltaTime);
         }
-
-
-        if (IsMoving() && IsGround()) // Snowboard hareket ediyorsa izi aktif et
-        {
-            trail.emitting = true;
-        }
-        else // Snowboard duruyorsa izi kapat
-        {
-            trail.emitting = false;
-        }
-    }
-
-    bool IsMoving()
-    {
-        return Mathf.Abs(rb.velocity.magnitude) > 0.1f;
     }
 
     private void Movement()
