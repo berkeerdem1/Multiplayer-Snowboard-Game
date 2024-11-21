@@ -1,3 +1,4 @@
+using DG.Tweening.Core.Easing;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.Netcode;
@@ -17,17 +18,20 @@ public class SnowboardController : NetworkBehaviour
     [SerializeField] private float minDrag = 0.1f;
     [SerializeField] private float maxDrag = 1f;
     [SerializeField] private float gravityScale;
-    [SerializeField] private float groundCheckDistance = 2;
     [SerializeField] private float slopeSlideStrength = 1;
     [SerializeField] private GameObject CameraPrefab;
     [SerializeField] private GameObject spawnObjectPrefab;
 
-    public bool isGrounded = false;
+    public float groundCheckDistance = 0.2f; // Yerden mesafeyi kontrol etmek için raycast mesafesi
+    public LayerMask groundLayer;           // Yalnýzca zemin katmanýný kontrol etmek için
+    private bool isGrounded = false;        // Yerle temas durumunu saklar
 
+    private bool controlsEnabled = true;
     private float throttle = 0f; // Hýzlanma faktörü
     private GameObject playerCamera;
     private Rigidbody rb; // RigidBody referansý
     private GameObject spawnObject;
+    private TrailRenderer trail;
 
     private NetworkVariable<float> randomFloatNumber = new NetworkVariable<float>(5.5f, 
                                                                                 NetworkVariableReadPermission.Everyone,
@@ -45,6 +49,8 @@ public class SnowboardController : NetworkBehaviour
     private void Start()
     {
         rb = GetComponent<Rigidbody>();
+        //trail = GetComponentInChildren<TrailRenderer>();
+        //trail.startWidth = 2f;
         InvokeRepeating("Movement", 0, 0.02f);
     }
 
@@ -54,6 +60,18 @@ public class SnowboardController : NetworkBehaviour
         moveInput = Input.GetAxis("Vertical"); // Ýleri/Geri hareket
         turnInput = Input.GetAxis("Horizontal"); // Saða/Sola dönüþ
 
+        if (IsLocalPlayer && Input.GetKeyDown(KeyCode.F) && !Race_Manager.Instance.isRaceActive)
+        {
+            if (Race_Manager.Instance == null )
+            {
+                Debug.LogError("RaceManager.Instance null! RaceManager sahneye doðru eklenmemiþ olabilir.");
+                return;
+            }
+            Debug.Log("F tuþuna basýldý!");
+            Race_Manager.Instance.PlayerReadyServerRpc(NetworkManager.Singleton.LocalClientId);
+            OnPlayerPressF();
+        }
+
         if (Input.GetKeyDown(KeyCode.Space))
         {
             rb.velocity *= (1f - brakeForce * Time.fixedDeltaTime);
@@ -62,12 +80,40 @@ public class SnowboardController : NetworkBehaviour
         {
             rb.velocity *= (1f - brakeForce * Time.fixedDeltaTime);
         }
+
+        ////if (IsMoving() && CheckGround()) // Snowboard hareket ediyorsa izi aktif et
+        ////{
+        ////    trail.emitting = true;
+        ////}
+        ////else // Snowboard duruyorsa izi kapat
+        ////{
+        ////    trail.emitting = false;
+        ////}
+    }
+    bool IsMoving()
+    {
+        return Mathf.Abs(rb.velocity.magnitude) > 0.1f;
+    }
+
+    public void DisableControls()
+    {
+        controlsEnabled = false;
+    }
+
+    public void EnableControls()
+    {
+        controlsEnabled = true;
     }
 
     private void Movement()
     {
-        if (!IsOwner)
-            return;
+        if (!IsOwner) return;
+
+        if (!controlsEnabled)
+        {
+            Turn();
+            return; 
+        }
 
         // 2. Hýzlanma faktörünü kontrol et
         if (moveInput > 0 && isGrounded) // Sadece yerdeyken hýzlanma artýrýlýr
@@ -85,22 +131,35 @@ public class SnowboardController : NetworkBehaviour
 
         throttle = Mathf.Clamp(throttle, 0f, 1f); // Hýzlanma faktörünü 0 ile 1 arasýnda sýnýrla
 
-        Debug.Log($"Current Velocity: {rb.velocity.magnitude}");
+        //Debug.Log($"Current Velocity: {rb.velocity.magnitude}");
 
         Turn();
         Rigidbody();
-        Dragging(moveInput);
+        //Dragging(moveInput);
         MovementByFrontPoint();
         Somersault();
         Slope();
-        IsGround();
+        CheckGround();
 
     }
 
-    private bool IsGround()
+    public void OnPlayerPressF()
     {
-        isGrounded = Physics.Raycast(transform.position, Vector3.down, groundCheckDistance);
-        return isGrounded;
+        var raceManager = FindObjectOfType<Race_Manager>();
+        raceManager.AddPlayerToRace(NetworkManager.Singleton.LocalClientId);
+    }
+
+    public bool CheckGround()
+    {
+        // 1. Raycast yöntemi
+        RaycastHit hit;
+        if (Physics.Raycast(transform.position, Vector3.down, out hit, groundCheckDistance, groundLayer))
+        {
+            return true;
+        }
+
+        // 2. Collider yöntemi
+        return false; // Eðer raycast bir þey bulamazsa false döndür
     }
 
 
@@ -153,7 +212,7 @@ public class SnowboardController : NetworkBehaviour
     private void Somersault()
     {
         // 7. Ters dönme durumu
-        if (Vector3.Dot(transform.up, Vector3.up) < 0.5f && isGrounded) // Araba yaklaþýk olarak ters dönmüþse
+        if (Vector3.Dot(transform.up, Vector3.up) < 0.5f && CheckGround()) // Araba yaklaþýk olarak ters dönmüþse
         {
             // Kullanýcý belirli bir tuþa bastýðýnda takla atmayý tetikle
             if (Input.GetKeyDown(KeyCode.LeftShift)) // "R" tuþu düzelme için örnek
@@ -188,23 +247,28 @@ public class SnowboardController : NetworkBehaviour
         }
     }
 
+
     void OnCollisionStay(Collision collision)
     {
-        // Yüzeyin normaline bakarak yere temas kontrolü
-        foreach (ContactPoint contact in collision.contacts)
+        if (collision.gameObject.layer == LayerMask.NameToLayer("Ground"))
         {
-            if (Vector3.Dot(contact.normal, Vector3.up) > 0.5f)
+            foreach (ContactPoint contact in collision.contacts)
             {
-                isGrounded = true;
-                return;
+                if (Vector3.Dot(contact.normal, Vector3.up) > 0.5f) // Yüzey yukarý doðruysa
+                {
+                    isGrounded = true;
+                    return;
+                }
             }
         }
-        isGrounded = false;
     }
 
     void OnCollisionExit(Collision collision)
     {
-        isGrounded = false; // Çarpýþma sona erdiðinde yere temas kesilir
+        if (collision.gameObject.layer == LayerMask.NameToLayer("Ground"))
+        {
+            isGrounded = false;
+        }
     }
 
     [ServerRpc]

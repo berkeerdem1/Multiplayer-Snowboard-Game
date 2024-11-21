@@ -46,7 +46,7 @@ public class CameraFollow : MonoBehaviour
 
         // Yükseklik sabitleme kontrolü
         // Eðer araba alçalmýyor, yükselmiyor veya ters dönmemiþse, kameranýn yüksekliðini sabit tut
-        if (Vector3.Dot(target.up, Vector3.up) < 0.5f && snowboard.isGrounded) // Araba ters dönmüþse
+        if (Vector3.Dot(target.up, Vector3.up) < 0.5f) // Araba ters dönmüþse
         {
             desiredPosition.y = heightLock; // Sabit yüksekliði uygula
         }
