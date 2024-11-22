@@ -3,12 +3,15 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
+using System.Linq; // LINQ için gerekli
+
 
 public class Race_Manager : NetworkBehaviour
 {
     public static Race_Manager Instance { get; private set; }
 
-    public List<ulong> activePlayers = new List<ulong>(); // Yarýþa katýlan oyuncular
+    public NetworkList<ulong> activePlayers = new NetworkList<ulong>(); // Yarýþa katýlan oyuncular
+
     private HashSet<ulong> disqualifiedPlayers = new HashSet<ulong>(); // Diskalifiye olan oyuncular
 
     public Transform raceStartPosition; // Baþlangýç çizgisi pozisyonu
@@ -35,6 +38,8 @@ public class Race_Manager : NetworkBehaviour
 
     private void Start()
     {
+        isRaceActive = false;
+
         if (IsServer)
         {
             playersReady = new NetworkList<ulong>();
@@ -53,7 +58,33 @@ public class Race_Manager : NetworkBehaviour
         }
     }
 
-    public void AddPlayerToRace(ulong playerId)
+    private void OnClientConnected(ulong clientId)
+    {
+        if (IsServer)
+        {
+            // Yeni baðlanan oyuncuyu listeye ekle
+            if (!activePlayers.Contains(clientId))
+                activePlayers.Add(clientId);
+        }
+    }
+
+    private void OnClientDisconnected(ulong clientId)
+    {
+        if (IsServer)
+        {
+            // Ayrýlan oyuncuyu listeden çýkar
+            if (activePlayers.Contains(clientId))
+                activePlayers.Remove(clientId);
+        }
+    }
+
+    public bool IsPlayerReady(ulong playerId)
+    {
+        return playersReady.Contains(playerId);
+    }
+
+    [ServerRpc(RequireOwnership = false)] 
+    public void AddPlayerToRaceServerRpc(ulong playerId)
     {
         if (disqualifiedPlayers.Contains(playerId))
         {
@@ -81,67 +112,87 @@ public class Race_Manager : NetworkBehaviour
     [ServerRpc(RequireOwnership = false)]
     public void PlayerReadyServerRpc(ulong playerId)
     {
-        Debug.Log($"PlayerReadyServerRpc çaðrýldý! Oyuncu ID: {playerId}");
-
-        if (!playersReady.Contains(playerId))
+        if (playersReady.Contains(playerId))
         {
-            playersReady.Add(playerId);
-            Debug.Log($"Oyuncu {playerId} playersReady listesine eklendi. Mevcut liste: {string.Join(", ", playersReady)}");
+            Debug.LogWarning($"Oyuncu {playerId} zaten hazýr.");
+            return;
+        }
 
-            // Oyuncuyu baþlangýç pozisyonuna ýþýnla
-            if (NetworkManager.Singleton.ConnectedClients.TryGetValue(playerId, out var client))
+        //playersReady.Add(playerId);
+        playersReady.Add(NetworkManager.Singleton.LocalClientId);
+        // Hazýr listesini diðer istemcilere gönder
+        SendPlayersReadyList();
+
+
+        if (NetworkManager.Singleton.ConnectedClients.TryGetValue(playerId, out var client))
+        {
+            var playerObject = client.PlayerObject;
+            if (playerObject != null)
             {
-                var playerObject = client.PlayerObject;
-                if (playerObject != null)
-                {
-                    playerObject.GetComponent<SnowboardController>().DisableControls();
-                    var transform = playerObject.transform;
-                    transform.position = raceStartPosition.position; // Baþlangýç pozisyonu
-                    transform.rotation = Quaternion.identity; // Varsayýlan rotasyon
-                    Debug.Log($"Oyuncu {playerId} baþlangýç pozisyonuna ýþýnlandý.");
-                }
-                else
-                {
-                    Debug.LogWarning($"PlayerObject bulunamadý! Oyuncu ID: {playerId}");
-                }
-            }
-            else
-            {
-                Debug.LogWarning($"ConnectedClients'ta oyuncu bulunamadý! Oyuncu ID: {playerId}");
+                playerObject.GetComponent<SnowboardController>().DisableControls();
+                //playerObject.transform.SetPositionAndRotation(raceStartPosition.position, Quaternion.identity);
+                Debug.Log($"Oyuncu {playerId} baþlangýç pozisyonuna ýþýnlandý.");
             }
         }
     }
 
+    [ServerRpc(RequireOwnership = false)]
+    public void TeleportPlayerToStartServerRpc(ulong clientId)
+    {
+        if (NetworkManager.Singleton.ConnectedClients.ContainsKey(clientId))
+        {
+            // Oyuncunun GameObject'ini al
+            var playerObject = NetworkManager.Singleton.ConnectedClients[clientId].PlayerObject;
+            // Baþlangýç pozisyonuna ýþýnla
+            playerObject.transform.position = raceStartPosition.position;
+            Debug.Log($"Oyuncu {clientId} baþlangýç noktasýna ýþýnlandý.");
+        }
+    }
 
+    [ClientRpc]
+    private void UpdatePlayerPositionClientRpc(ulong clientId, Vector3 newPosition)
+    {
+        if (NetworkManager.Singleton.LocalClientId == clientId)
+        {
+            var playerObject = NetworkManager.Singleton.LocalClient.PlayerObject;
+            playerObject.transform.position = newPosition;
+        }
+    }
+
+    private void SendPlayersReadyList()
+    {
+        // NetworkList'in içeriklerini manuel olarak bir listeye aktarma
+        List<ulong> playersReadyList = new List<ulong>();
+
+        foreach (var playerId in playersReady)
+        {
+            playersReadyList.Add(playerId);
+        }
+
+        // Listeyi diziye çevir ve RPC metodunu çaðýr
+        UpdatePlayersReadyClientRpc(playersReadyList.ToArray());
+    }
+
+
+    [ClientRpc]
+    private void UpdatePlayersReadyClientRpc(ulong[] readyPlayers)
+    {
+        Debug.Log($"Hazýr oyuncular güncellendi: {string.Join(", ", readyPlayers)}");
+    }
 
 
     private void OnPlayersReadyChanged(NetworkListEvent<ulong> changeEvent)
     {
-        Debug.Log("OnPlayersReadyChanged tetiklendi.");
-        Debug.Log($"Hazýr oyuncular: {string.Join(", ", playersReady)}");
         Debug.Log($"Hazýr oyuncu sayýsý: {playersReady.Count}");
-
-        if (!isRaceActive && playersReady.Count > 0 && playersReady.Count == NetworkManager.Singleton.ConnectedClients.Count)
+        if (!isRaceActive && playersReady.Count > 0)
         {
-            Debug.Log("Tüm oyuncular hazýr. Yarýþ baþlýyor!");
             StartCountdown();
-        }
-        else if (isRaceActive)
-        {
-            Debug.Log("Yarýþ zaten aktif. Yeni oyuncular eklenmeyecek.");
-        }
-        else
-        {
-            Debug.LogWarning("Tüm oyuncular henüz hazýr deðil.");
         }
     }
 
 
-
     private void StartCountdown()
     {
-        isRaceActive = true;
-        Debug.Log("StartCountdown çaðrýldý. Geri sayým baþlatýlýyor.");
         StartCoroutine(StartRaceCountdown());
     }
 
@@ -149,8 +200,6 @@ public class Race_Manager : NetworkBehaviour
     private IEnumerator StartRaceCountdown()
     {
         float remainingTime = countdownTime;
-        Debug.Log($"StartRaceCountdown baþladý. Geri sayým süresi: {countdownTime} saniye.");
-
         while (remainingTime > 0)
         {
             Debug.Log($"Yarýþ baþlýyor: {remainingTime} saniye kaldý!");
@@ -158,7 +207,6 @@ public class Race_Manager : NetworkBehaviour
             remainingTime--;
         }
 
-        Debug.Log("Geri sayým bitti. Yarýþ baþlatýlýyor!");
         StartRaceServerRpc();
     }
 
@@ -167,47 +215,80 @@ public class Race_Manager : NetworkBehaviour
     public void StartRaceServerRpc()
     {
         isRaceEnd = false;
-        Debug.Log("StartRaceServerRpc çaðrýldý. Yarýþ baþlatýldý!");
+        isRaceActive = true;
 
         foreach (ulong playerId in playersReady)
         {
             if (NetworkManager.Singleton.ConnectedClients.TryGetValue(playerId, out var client))
             {
-                var playerObject = client.PlayerObject;
-                playerObject.GetComponent<Player_Disqualify>().isInRace = true;
-                var controller = playerObject.GetComponent<SnowboardController>();
-
-                if (controller != null)
-                {
-                    controller.EnableControls();
-                    Debug.Log($"Oyuncu {playerId} yarýþa katýldý ve kontrolleri açýldý.");
-                }
-                else
-                {
-                    Debug.LogError($"Oyuncu {playerId} için SnowboardController bulunamadý!");
-                }
-            }
-            else
-            {
-                Debug.LogError($"PlayerID {playerId} için NetworkManager'da bir client bulunamadý.");
+                var controller = client.PlayerObject.GetComponent<SnowboardController>();
+                controller?.EnableControls();
+                Debug.Log($"Oyuncu {playerId} yarýþa baþladý.");
             }
         }
 
-        Debug.Log("Yarýþa dahil olan tüm oyuncularýn kontrolleri açýldý.");
         playersReady.Clear();
     }
 
-    public void EndRace(ulong winnerId)
+    [ClientRpc]
+    private void UpdatePlayerRaceStateClientRpc(ulong playerId, bool isInRace)
     {
-        Debug.Log($"Yarýþ sona erdi! Birinci oyuncu: {winnerId}");
-
-        // TPS kamerayý aktif et
-        var winner = NetworkManager.Singleton.ConnectedClients[winnerId].PlayerObject.transform;
-        ActivateTpsCamera(winner);
-
-        StartCoroutine(EndRaceCoroutine());
+        if (playerId == NetworkManager.Singleton.LocalClientId)
+        {
+            Debug.Log($"Yarýþ durumu güncellendi: Oyuncu {playerId} yarýþta mý? {isInRace}");
+            Race_Manager.Instance.isRaceActive = isInRace;
+        }
     }
 
+    //public void EndRace(ulong winnerId)
+    //{
+    //    isRaceActive = false;
+
+    //    Debug.Log($"Yarýþ sona erdi! Birinci oyuncu: {winnerId}");
+
+    //    // TPS kamerayý aktif et
+    //    var winner = NetworkManager.Singleton.ConnectedClients[winnerId].PlayerObject.transform;
+    //    ActivateTpsCamera(winner);
+
+    //    StartCoroutine(EndRaceCoroutine());
+    //}
+
+    [ServerRpc(RequireOwnership = false)]
+    public void CheckWinnerServerRpc(ulong winnerId)
+    {
+        if (NetworkManager.Singleton.ConnectedClients.ContainsKey(winnerId))
+        {
+            var winner = NetworkManager.Singleton.ConnectedClients[winnerId].PlayerObject.transform;
+
+            // Kazanan bilgisi istemcilere iletiliyor
+            AnnounceWinnerClientRpc(winnerId);
+        }
+    }
+
+    [ClientRpc]
+    private void AnnounceWinnerClientRpc(ulong winnerId)
+    {
+        isRaceActive = false;
+        Debug.Log($"Kazanan oyuncu ID: {winnerId}");
+        // Ýlgili iþlemler (örneðin, UI güncellemesi)
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    public void SetWinnerServerRpc(ulong clientId)
+    {
+        if (NetworkManager.Singleton.ConnectedClients.ContainsKey(clientId))
+        {
+            Debug.Log($"Kazanan oyuncu: {clientId}");
+            var winner = NetworkManager.Singleton.ConnectedClients[clientId].PlayerObject.transform;
+            tpsCameraPrefab.transform.position = winner.position + new Vector3(0, 5, -10); // Kamera pozisyonunu ayarlayin
+
+            ActivateTpsCamera(winner.transform);
+        }
+        else
+        {
+            Debug.LogWarning($"ClientId {clientId} bulunamadý.");
+        }
+    }
     private void ActivateTpsCamera(Transform winner)
     {
         if (tpsCameraPrefab != null)
@@ -219,8 +300,8 @@ public class Race_Manager : NetworkBehaviour
             }
 
             tpsCameraInstance = Instantiate(tpsCameraPrefab);
-            tpsCameraInstance.transform.position = winner.position + new Vector3(0, 5, -10); // Kamerayý oyuncunun arkasýna konumlandýr
-            tpsCameraInstance.transform.LookAt(winner); // Kamerayý oyuncuya baktýr
+            tpsCameraInstance.transform.position = winner.position + new Vector3(0, 5, -10); // Kamerayý oyuncunun arkasýna yerleþtir
+            tpsCameraInstance.transform.LookAt(winner); // Kamerayý oyuncuya doðru baktýr
 
             // Kamera her frame'de oyuncuyu takip etsin
             StartCoroutine(FollowPlayer(winner));
@@ -229,34 +310,31 @@ public class Race_Manager : NetworkBehaviour
 
     private IEnumerator FollowPlayer(Transform winner)
     {
-        while (tpsCameraInstance != null)
-        {
-            // Kamerayý her frame'de oyuncunun konumuna göre ayarlýyoruz
-            tpsCameraInstance.transform.position = Vector3.Lerp(tpsCameraInstance.transform.position, winner.position + new Vector3(0, 5, -10), Time.deltaTime * 5f); // Kamera oyuncunun arkasýnda
-            tpsCameraInstance.transform.LookAt(winner); // Kamera her zaman oyuncuya bakacak
+        float followDuration = 5f; // Kameranýn ne kadar süre boyunca takip edeceðini belirleyin
+        float timeElapsed = 0f;
 
-            yield return null; // Bir sonraki frame'e geçiþ yap
-        }
-    }
-
-    private IEnumerator EndRaceCoroutine()
-    {
-        yield return new WaitForSeconds(5f); // 5 saniye TPS kamera göster
-        if (tpsCameraInstance != null)
+        while (timeElapsed < followDuration && tpsCameraInstance != null)
         {
-            Destroy(tpsCameraInstance);
+            tpsCameraInstance.transform.position = Vector3.Lerp(tpsCameraInstance.transform.position, winner.position + new Vector3(0, 5, -10), Time.deltaTime * 5f);
+            tpsCameraInstance.transform.LookAt(winner); // Kamera oyuncuyu takip etmeye devam edecek
+
+            timeElapsed += Time.deltaTime; // Geçen zamaný artýr
+            yield return null; // Bir sonraki frame'e geç
         }
 
-        ResetRace();
+        // Süre dolduðunda kamera takip etmeyi durdurabiliriz
+        Destroy(tpsCameraInstance); // Kamerayý yok et (veya baþka bir þey yap)
     }
 
     public void ResetRace()
     {
         isRaceEnd = true;
+        isRaceActive = false;
         activePlayers.Clear();
         disqualifiedPlayers.Clear();
+        playersReady.Clear();
         Debug.Log("Yarýþ sýfýrlandý.");
-        isRaceActive = true;
+        //isRaceActive = true;
     }
 
 }

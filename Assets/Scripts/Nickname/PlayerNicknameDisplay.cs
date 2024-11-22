@@ -82,4 +82,12 @@ public class PlayerNicknameDisplay : NetworkBehaviour
             PlayersNickname_Controller.Instance.AddPlayerNickname(nickname);
         }
     }
+
+    private void OnDestroy()
+    {
+        if (IsOwner)
+        {
+            Destroy(nicknameText.gameObject);
+        }
+    }
 }

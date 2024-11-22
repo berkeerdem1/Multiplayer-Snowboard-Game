@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
+using static UnityEngine.Rendering.DebugUI;
 
 public class SnowboardController : NetworkBehaviour
 {
@@ -20,7 +21,11 @@ public class SnowboardController : NetworkBehaviour
     [SerializeField] private float gravityScale;
     [SerializeField] private float slopeSlideStrength = 1;
     [SerializeField] private GameObject CameraPrefab;
-    [SerializeField] private GameObject spawnObjectPrefab;
+    [SerializeField] private Transform firePoint;
+    [SerializeField] private GameObject bullerPrefab;
+    [SerializeField] private float bulletSpeed;
+
+    [SerializeField] private GameObject shield;
 
     public float groundCheckDistance = 0.2f; // Yerden mesafeyi kontrol etmek için raycast mesafesi
     public LayerMask groundLayer;           // Yalnýzca zemin katmanýný kontrol etmek için
@@ -44,6 +49,32 @@ public class SnowboardController : NetworkBehaviour
         {
             playerCamera = Instantiate(CameraPrefab); // Kamera prefab'ýný oluþtur
             playerCamera.GetComponent<CameraFollow>().SetTarget(transform); // Player'ý takip et
+
+
+            // Ýstemci olduðunuzu kontrol edin
+            if (NetworkManager.Singleton.IsClient)
+            {
+                Debug.Log("Bu bir istemci.");
+            }
+
+            // Sunucuya baðlý olup olmadýðýnýzý kontrol edin
+            if (NetworkManager.Singleton.IsConnectedClient)
+            {
+                Debug.Log("Ýstemci baþarýyla sunucuya baðlý.");
+            }
+            else
+            {
+                Debug.LogError("Ýstemci sunucuya baðlý deðil!");
+            }
+        }
+
+        if (IsServer)
+        {
+            Debug.Log("Bu obje sunucuda spawn oldu.");
+        }
+        else
+        {
+            Debug.Log("Bu obje istemci tarafýnda spawn oldu.");
         }
     }
     private void Start()
@@ -51,6 +82,7 @@ public class SnowboardController : NetworkBehaviour
         rb = GetComponent<Rigidbody>();
         //trail = GetComponentInChildren<TrailRenderer>();
         //trail.startWidth = 2f;
+        shield.SetActive(false);
         InvokeRepeating("Movement", 0, 0.02f);
     }
 
@@ -60,18 +92,6 @@ public class SnowboardController : NetworkBehaviour
         moveInput = Input.GetAxis("Vertical"); // Ýleri/Geri hareket
         turnInput = Input.GetAxis("Horizontal"); // Saða/Sola dönüþ
 
-        if (IsLocalPlayer && Input.GetKeyDown(KeyCode.F) && !Race_Manager.Instance.isRaceActive)
-        {
-            if (Race_Manager.Instance == null )
-            {
-                Debug.LogError("RaceManager.Instance null! RaceManager sahneye doðru eklenmemiþ olabilir.");
-                return;
-            }
-            Debug.Log("F tuþuna basýldý!");
-            Race_Manager.Instance.PlayerReadyServerRpc(NetworkManager.Singleton.LocalClientId);
-            OnPlayerPressF();
-        }
-
         if (Input.GetKeyDown(KeyCode.Space))
         {
             rb.velocity *= (1f - brakeForce * Time.fixedDeltaTime);
@@ -79,6 +99,15 @@ public class SnowboardController : NetworkBehaviour
         if (Input.GetKeyUp(KeyCode.Space))
         {
             rb.velocity *= (1f - brakeForce * Time.fixedDeltaTime);
+        }
+
+        if (Input.GetKey(KeyCode.V) && IsOwner)
+        {
+            ShootServerRpc();
+        }
+        if (Input.GetKey(KeyCode.T) && IsOwner)
+        {
+            ShieldActiveSelf();
         }
 
         ////if (IsMoving() && CheckGround()) // Snowboard hareket ediyorsa izi aktif et
@@ -90,6 +119,28 @@ public class SnowboardController : NetworkBehaviour
         ////    trail.emitting = false;
         ////}
     }
+    void ShieldActiveSelf()
+    {
+        if(shield.activeSelf)
+            shield.SetActive(false);
+        else
+            shield.SetActive(true);
+    }
+
+    [ServerRpc]
+    void ShootServerRpc()
+    {
+        Vector3 dir = firePoint.forward;
+
+        // Mermiyi doðru bir rotasyonla spawnlayýn.
+        GameObject newBullet = Instantiate(bullerPrefab, firePoint.position, firePoint.rotation);
+        newBullet.GetComponent<NetworkObject>().Spawn();
+
+        // Rigidbody bileþenine eriþip hýzý ayarlayýn.
+        Rigidbody rb = newBullet.GetComponent<Rigidbody>();
+        rb.velocity = dir * bulletSpeed;
+    }
+
     bool IsMoving()
     {
         return Mathf.Abs(rb.velocity.magnitude) > 0.1f;
@@ -141,12 +192,6 @@ public class SnowboardController : NetworkBehaviour
         Slope();
         CheckGround();
 
-    }
-
-    public void OnPlayerPressF()
-    {
-        var raceManager = FindObjectOfType<Race_Manager>();
-        raceManager.AddPlayerToRace(NetworkManager.Singleton.LocalClientId);
     }
 
     public bool CheckGround()
@@ -247,6 +292,9 @@ public class SnowboardController : NetworkBehaviour
         }
     }
 
+    void OnCollisionEnter(Collision collision)
+    {
+    }
 
     void OnCollisionStay(Collision collision)
     {
@@ -270,6 +318,17 @@ public class SnowboardController : NetworkBehaviour
             isGrounded = false;
         }
     }
+
+    [ServerRpc]
+    public void BulletDamageServerRpc(Vector3 collisionPoint)
+    {
+        if (!IsOwner) return;
+
+        print("mermi degdi");
+        Vector3 dir = (transform.position - collisionPoint).normalized; // Çarpma yönünü hesapla
+        rb.AddForce(dir * 3, ForceMode.Impulse); // Çarpmadan kaçma kuvveti uygula
+    }
+
 
     [ServerRpc]
     private void TestingServerRpc()  // Host sahibiyse konsola yazar

@@ -14,14 +14,16 @@ public class FinishLine : MonoBehaviour
         var networkObject = other.GetComponent<NetworkObject>();
         if (networkObject != null)
         {
-            ulong playerId = networkObject.OwnerClientId;
+            ulong winnerId = networkObject.OwnerClientId;
 
-            // Yarýþta olan oyuncu mu?
-            var raceManager = FindObjectOfType<Race_Manager>();
-            if (raceManager.activePlayers.Contains(playerId))
+            if (Race_Manager.Instance.activePlayers.Contains(winnerId))
             {
-                Debug.Log($"Oyuncu {playerId} bitiþ çizgisine ulaþtý!");
-                raceManager.EndRace(playerId);
+                Debug.Log($"Oyuncu {winnerId} bitiþ çizgisine ulaþtý!");
+                //raceManager.EndRace(playerId);
+                Race_Manager.Instance.CheckWinnerServerRpc(winnerId);
+                Race_Manager.Instance.SetWinnerServerRpc(NetworkManager.Singleton.LocalClientId);
+
+
                 raceFinished = true;
             }
         }

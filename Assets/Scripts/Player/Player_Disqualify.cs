@@ -5,7 +5,7 @@ using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class Player_Disqualify : MonoBehaviour
+public class Player_Disqualify : NetworkBehaviour
 {
     public Transform[] pathPoints; // Path'in noktalarý
     public float maxDistance = 15f; // Path'ten maksimum uzaklýk
@@ -19,9 +19,13 @@ public class Player_Disqualify : MonoBehaviour
 
     public Text returnTimeText;
 
-    private void Start()
+    private void Awake()
     {
         racePath = FindFirstObjectByType<RacePath>();
+    }
+
+    private void Start()
+    {
         pathPoints = racePath.pathPoints;
         startPosition = transform.position;
         returnTimeText.enabled = false;
@@ -29,7 +33,7 @@ public class Player_Disqualify : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if (!isInRace && !Race_Manager.Instance.isRaceActive)
+        if (!isInRace || !Race_Manager.Instance.isRaceActive || !IsClient)
             return; // Yarýþta deðilse hiçbir þey yapma
 
         if (Race_Manager.Instance.isRaceEnd)
