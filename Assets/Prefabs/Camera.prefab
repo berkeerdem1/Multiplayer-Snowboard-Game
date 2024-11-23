@@ -150,6 +150,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 223a9a62fc6528749818558ebf5c46da, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  offset: {x: 10, y: 4.63, z: 0.97}
+  offset: {x: 10, y: 4.63, z: 0}
   followSpeed: 10
   heightLock: 5

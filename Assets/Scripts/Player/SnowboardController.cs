@@ -1,9 +1,8 @@
-using DG.Tweening.Core.Easing;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
-using static UnityEngine.Rendering.DebugUI;
+using UnityEngine.UIElements;
 
 public class SnowboardController : NetworkBehaviour
 {
@@ -27,8 +26,17 @@ public class SnowboardController : NetworkBehaviour
 
     [SerializeField] private GameObject shield;
 
-    public float groundCheckDistance = 0.2f; // Yerden mesafeyi kontrol etmek için raycast mesafesi
-    public LayerMask groundLayer;           // Yalnýzca zemin katmanýný kontrol etmek için
+
+    [SerializeField] private float dashForce = 10f; // Dash gücü
+    [SerializeField] private float dashDuration = 0.2f; // Dash süresi
+    private bool isDashing = false;
+
+    [SerializeField]
+    private float jumpForce = 10;
+
+
+   [SerializeField] private float groundCheckDistance = 0.2f; // Yerden mesafeyi kontrol etmek için raycast mesafesi
+    [SerializeField] private LayerMask groundLayer;           // Yalnýzca zemin katmanýný kontrol etmek için
     private bool isGrounded = false;        // Yerle temas durumunu saklar
 
     private bool controlsEnabled = true;
@@ -92,22 +100,18 @@ public class SnowboardController : NetworkBehaviour
         moveInput = Input.GetAxis("Vertical"); // Ýleri/Geri hareket
         turnInput = Input.GetAxis("Horizontal"); // Saða/Sola dönüþ
 
-        if (Input.GetKeyDown(KeyCode.Space))
+        if (Input.GetKeyDown(KeyCode.LeftShift))
         {
             rb.velocity *= (1f - brakeForce * Time.fixedDeltaTime);
         }
-        if (Input.GetKeyUp(KeyCode.Space))
+        if (Input.GetKeyUp(KeyCode.LeftShift))
         {
             rb.velocity *= (1f - brakeForce * Time.fixedDeltaTime);
         }
 
-        if (Input.GetKey(KeyCode.V) && IsOwner)
+        if (Input.GetKeyUp(KeyCode.Space) && isGrounded)
         {
-            ShootServerRpc();
-        }
-        if (Input.GetKey(KeyCode.T) && IsOwner)
-        {
-            ShieldActiveSelf();
+            Jump();
         }
 
         ////if (IsMoving() && CheckGround()) // Snowboard hareket ediyorsa izi aktif et
@@ -119,28 +123,8 @@ public class SnowboardController : NetworkBehaviour
         ////    trail.emitting = false;
         ////}
     }
-    void ShieldActiveSelf()
-    {
-        if(shield.activeSelf)
-            shield.SetActive(false);
-        else
-            shield.SetActive(true);
-    }
 
-    [ServerRpc]
-    void ShootServerRpc()
-    {
-        Vector3 dir = firePoint.forward;
-
-        // Mermiyi doðru bir rotasyonla spawnlayýn.
-        GameObject newBullet = Instantiate(bullerPrefab, firePoint.position, firePoint.rotation);
-        newBullet.GetComponent<NetworkObject>().Spawn();
-
-        // Rigidbody bileþenine eriþip hýzý ayarlayýn.
-        Rigidbody rb = newBullet.GetComponent<Rigidbody>();
-        rb.velocity = dir * bulletSpeed;
-    }
-
+   
     bool IsMoving()
     {
         return Mathf.Abs(rb.velocity.magnitude) > 0.1f;
@@ -185,12 +169,15 @@ public class SnowboardController : NetworkBehaviour
         //Debug.Log($"Current Velocity: {rb.velocity.magnitude}");
 
         Turn();
-        Rigidbody();
+        Gravity();
         //Dragging(moveInput);
         MovementByFrontPoint();
         Somersault();
         Slope();
         CheckGround();
+
+        Debug.DrawRay(firePoint.position, firePoint.forward * 5, Color.red, 2f);
+
 
     }
 
@@ -201,20 +188,20 @@ public class SnowboardController : NetworkBehaviour
         if (Physics.Raycast(transform.position, Vector3.down, out hit, groundCheckDistance, groundLayer))
         {
             return true;
-        }
+        }   
 
         // 2. Collider yöntemi
         return false; // Eðer raycast bir þey bulamazsa false döndür
     }
 
-
-    private void Rigidbody()
+    private void Gravity()
     {
         // 5. Yerçekimi etkisi
         if (!isGrounded)
         {
             rb.AddForce(Vector3.down * gravityScale * rb.mass, ForceMode.Acceleration); // Yerçekimi etkisi
         }
+        else gravityScale = 10;
     }
 
     private void Turn()
@@ -292,8 +279,12 @@ public class SnowboardController : NetworkBehaviour
         }
     }
 
-    void OnCollisionEnter(Collision collision)
+    private void Jump()
     {
+        if (!IsOwner) return;
+
+        rb.AddForce(transform.up * jumpForce, ForceMode.Impulse);
+        gravityScale = 20;
     }
 
     void OnCollisionStay(Collision collision)
@@ -319,16 +310,83 @@ public class SnowboardController : NetworkBehaviour
         }
     }
 
+
     [ServerRpc]
+    public void ShootServerRpc()
+    {
+        // Mermiyi doðru bir rotasyonla spawnlayýn.
+        GameObject newBullet =Instantiate(bullerPrefab, firePoint.position, firePoint.rotation);
+        NetworkObject networkObject = newBullet.GetComponent<NetworkObject>();
+        networkObject.Spawn();
+        //NetworkObject networkObject = NetworkedObjectPool.Instance.GetFromPool(position, rotation);
+
+        // Rigidbody bileþenine eriþip hýzý ayarlayýn.
+        Rigidbody rb = networkObject.GetComponent<Rigidbody>();
+        rb.velocity = firePoint.rotation * Vector3.forward * bulletSpeed;
+    }
+
+
+    [ServerRpc(RequireOwnership = false)]
     public void BulletDamageServerRpc(Vector3 collisionPoint)
     {
         if (!IsOwner) return;
 
-        print("mermi degdi");
-        Vector3 dir = (transform.position - collisionPoint).normalized; // Çarpma yönünü hesapla
-        rb.AddForce(dir * 3, ForceMode.Impulse); // Çarpmadan kaçma kuvveti uygula
+        Debug.Log("ServerRpc çaðrýldý, oyuncu hasar alacak!");
+
+        Vector3 dir = (transform.position - collisionPoint).normalized;
+        rb.AddForce(dir * 100f, ForceMode.Impulse); // Tepme etkisi
+
+        Debug.Log("Oyuncunun hasar aldi");
     }
 
+
+    [ServerRpc(RequireOwnership = false)]
+    public void ShieldServerRpc()
+    {
+        if (!IsOwner) return;
+
+        shield.SetActive(true);
+        StartCoroutine(Coroutine());
+
+        Debug.Log("Shield calisti");
+
+    }
+
+    IEnumerator Coroutine()
+    {
+        yield return new WaitForSeconds(10);
+        shield.SetActive(false);
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    public void DashServerRpc()
+    {
+        if (isDashing) return; 
+        isDashing = true;
+
+        rb.AddForce(frontPoint.forward * dashForce, ForceMode.Impulse);
+
+        Invoke(nameof(StopDash), dashDuration);
+    }
+
+    private void StopDash()
+    {
+        isDashing = false;
+        rb.velocity = Vector3.zero; // Dash bittikten sonra hýzý sýfýrla
+    }
+
+    [ServerRpc]
+    public void HighJumpServerRpc()
+    {
+        jumpForce = 20;
+        gravityScale = 20;
+    }
+
+    [ServerRpc]
+    public void InitialJumpServerRpc()
+    {
+        jumpForce = 10;
+    }
 
     [ServerRpc]
     private void TestingServerRpc()  // Host sahibiyse konsola yazar
