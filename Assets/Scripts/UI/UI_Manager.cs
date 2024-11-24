@@ -14,7 +14,7 @@ public class UI_Manager : MonoBehaviour
 
     private List<GameObject> nicknameObjects = new List<GameObject>();
 
-
+    GameObject newNickname;
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -59,7 +59,11 @@ public class UI_Manager : MonoBehaviour
         // Yeni nickname'leri ekle
         foreach (var nickname in nicknames)
         {
-            GameObject newNickname = Instantiate(nicknamePrefab, nicknamePanel.transform);
+            if (newNickname != null)
+            {
+                GameObject newNickname;
+            }
+            newNickname = Instantiate(nicknamePrefab, nicknamePanel.transform);
 
             // Eðer bu nickname oyuncunun kendisine aitse "(You)" ekle
             if (nickname == Nickname_Manager.Instance.nickname)
@@ -81,5 +85,11 @@ public class UI_Manager : MonoBehaviour
     {
         // Panelin aktiflik durumunu deðiþtir
         nicknamePanel.SetActive(!nicknamePanel.activeSelf);
+    }
+
+    public void RemovePlayerNickName(GameObject player)
+    {
+        nicknameObjects.Remove(player);
+        Destroy(newNickname);
     }
 }

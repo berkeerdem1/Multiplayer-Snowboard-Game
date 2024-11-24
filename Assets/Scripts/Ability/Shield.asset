@@ -16,3 +16,4 @@ MonoBehaviour:
   abilityIcon: {fileID: 21300000, guid: 3162cb5b8ce5b8c42bdb010a01fc4f1b, type: 3}
   cooldownTime: 20
   description: 
+  number: 2

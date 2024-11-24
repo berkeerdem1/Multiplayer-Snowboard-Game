@@ -9,6 +9,7 @@ public class AbilitySO : ScriptableObject
     public Sprite abilityIcon;
     public float cooldownTime;
     public string description;
+    public int number;
 
     public void Activate(GameObject player)
     {

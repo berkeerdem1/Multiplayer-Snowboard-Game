@@ -124,7 +124,14 @@ public class SnowboardController : NetworkBehaviour
         ////}
     }
 
-   
+    public void ApplyItemEffect()
+    {
+        // Ýtem etkisini burada uygula
+        Debug.Log("Item etkisi uygulandý!");
+        // Örnek: Can arttýrma
+        // health += 10;
+    }
+
     bool IsMoving()
     {
         return Mathf.Abs(rb.velocity.magnitude) > 0.1f;
@@ -402,6 +409,8 @@ public class SnowboardController : NetworkBehaviour
 
     private void OnDestroy()
     {
+        UI_Manager.Instance.RemovePlayerNickName(gameObject);
+
         if (IsOwner && playerCamera != null)
         {
             Destroy(playerCamera); // Oyuncu ayrýldýðýnda kamerayý yok et

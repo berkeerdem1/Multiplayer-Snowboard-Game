@@ -1,37 +1,58 @@
 using System.Collections;
 using System.Collections.Generic;
 using Unity.Netcode;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class PlayerAbilities : NetworkBehaviour
 {
-    [SerializeField] private List<string> abilities = new List<string>();
-
-    [ServerRpc(RequireOwnership = false)]
-    public void AddAbilityServerRpc(string abilityName)
+    public AbilitySO[] allAbilities; // Tüm yeteneklerin ScriptableObject referanslarý
+    [SerializeField] private List<int> abilityNumbs = new List<int>();
+    [SerializeField] private NetworkList<int> abilityIDs = new NetworkList<int>(); // Yetenek ID'lerini senkronize ediyoruz. //
+    private void Awake()
     {
-        if (!abilities.Contains(abilityName))
+        if (IsServer)
         {
-            abilities.Add(abilityName);
-            Debug.Log($"Ability {abilityName} added to {OwnerClientId}");
-            NotifyAbilityAddedClientRpc(abilityName);
+            abilityIDs.Clear();
         }
     }
 
-    [ClientRpc]
-    private void NotifyAbilityAddedClientRpc(string abilityName)
+    [ServerRpc(RequireOwnership = false)]
+    public void AddAbilityServerRpc(int abilityID)
     {
-        Debug.Log($"Client: Ability {abilityName} added.");
-        // UI güncellemesi buraya eklenebilir.
+        if (!abilityIDs.Contains(abilityID))
+        {
+            abilityIDs.Add(abilityID);
+            Debug.Log($"Yetenek ID {abilityID} oyuncuya eklendi.");
+        }
+        abilityNumbs.Add(abilityID);
+
     }
 
-    public bool HasAbility(string abilityName)
+    public bool HasAbility(int abilityID)
     {
-        return abilities.Contains(abilityName);
+        return abilityIDs.Contains(abilityID);
     }
 
-    public void RemoveAbility(string abilityName)
+    public AbilitySO GetAbility(int abilityID)
     {
-        abilities.Remove(abilityName);
+        if (abilityID >= 0 && abilityID < allAbilities.Length)
+        {
+            return allAbilities[abilityID];
+        }
+
+        Debug.LogWarning("Geçersiz yetenek ID'si!");
+        return null;
+    }
+
+    public void RemoveAbility(int abilityID)
+    {
+        if (IsServer && abilityIDs.Contains(abilityID))
+        {
+            abilityIDs.Remove(abilityID);
+            
+            Debug.Log($"Yetenek ID {abilityID} oyuncudan kaldýrýldý.");
+        }
+        abilityNumbs.Remove(abilityID);
     }
 }

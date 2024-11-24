@@ -6,8 +6,9 @@ public class PlayerAbilityUsage : NetworkBehaviour
     private PlayerAbilities playerAbilities;
     private SnowboardController snowboard;
 
-    int bulletCount = 3;
-    int highJumpCount = 5;
+    // Yetenek limitleri
+    private int bulletCount = 3;
+    private int highJumpCount = 5;
 
     private void Start()
     {
@@ -17,76 +18,108 @@ public class PlayerAbilityUsage : NetworkBehaviour
 
     private void Update()
     {
-        if (!IsOwner) return;
+        if (!IsOwner) return; // Sadece yerel oyuncu kontrolleri uygulasýn
 
-        if (Input.GetMouseButtonDown(0)) 
+        // Yeteneklerin kullanýmý
+        if (Input.GetMouseButtonDown(0))
         {
-            UseAbility("Bullet");
+            UseAbility(1);
         }
 
         if (Input.GetKeyDown(KeyCode.C))
         {
-            UseAbility("Shield");
+            UseAbility(2);
         }
 
-        if (Input.GetKeyDown(KeyCode.Space))
+        if (Input.GetKeyDown(KeyCode.Space) && snowboard.CheckGround())
         {
-            UseAbility("HighJump");
+            UseAbility(3);
         }
     }
 
-    private void UseAbility(string abilityName)
+    private void UseAbility(int abilityNumber)
     {
-        if (playerAbilities.HasAbility(abilityName))
+        if (playerAbilities.HasAbility(abilityNumber))
         {
-            Debug.Log($"{abilityName} used by player {OwnerClientId}");
-            UseAbilityServerRpc(abilityName);
+            Debug.Log($"{abilityNumber} kullanýldý, Player ID: {OwnerClientId}");
+            UseAbilityServerRpc(abilityNumber);
         }
         else
         {
-            Debug.Log($"Player {OwnerClientId} does not have ability {abilityName}");
+            Debug.Log($"Player {OwnerClientId} yeteneði yok: {abilityNumber}");
         }
     }
 
-    [ServerRpc]
-    private void UseAbilityServerRpc(string abilityName)
+    [ServerRpc(RequireOwnership = false)]
+    private void UseAbilityServerRpc(int abilityNumb)
     {
-        Debug.Log($"Server: {abilityName} activated by {OwnerClientId}");
+        Debug.Log($"Server: {abilityNumb} yeteneði aktif edildi, Player ID: {OwnerClientId}");
 
-        if(abilityName == "Bullet")
+        // Yetenekler üzerinde iþlem yap
+        switch (abilityNumb)
         {
-            if (bulletCount > 0)
-            {
-                snowboard.ShootServerRpc();
-                bulletCount -= 1;
-            }
+            case 1:
+                HandleBulletAbility();
+                break;
 
-            if (bulletCount == 0) 
-            { 
-                playerAbilities.RemoveAbility(abilityName);
-                bulletCount = 3;
-            }
+            case 2:
+                HandleShieldAbility();
+                break;
+
+            case 3:
+                HandleHighJumpAbility();
+                break;
+
+            default:
+                Debug.LogWarning($"Bilinmeyen yetenek: {abilityNumb}");
+                break;
         }
-        if (abilityName == "Shield")
+    }
+
+    // "Bullet" yeteneði iþlemleri
+    private void HandleBulletAbility()
+    {
+        if (bulletCount > 0)
         {
-            snowboard.ShieldServerRpc();
-            playerAbilities.RemoveAbility(abilityName);
+            snowboard.ShootServerRpc();
+            bulletCount--;
+
+            Debug.Log($"Kalan mermi: {bulletCount}");
         }
 
-        if (abilityName == "HighJump")
+        if (bulletCount == 0)
         {
-            if (highJumpCount > 0)
-            {
-                snowboard.HighJumpServerRpc();
-                highJumpCount -= 1;
-            }
+            Debug.Log("Mermiler bitti, yetenek kaldýrýlýyor.");
+            playerAbilities.RemoveAbility(1);
+            bulletCount = 3; // Yeniden dolum için
+        }
+    }
 
-            if (highJumpCount == 0)
-            {
-                snowboard.InitialJumpServerRpc();
-                playerAbilities.RemoveAbility(abilityName);
-                highJumpCount = 5;
-            }
+    // "Shield" yeteneði iþlemleri
+    private void HandleShieldAbility()
+    {
+        snowboard.ShieldServerRpc();
+        Debug.Log("Shield etkinleþtirildi.");
+        playerAbilities.RemoveAbility(2);
+    }
+
+    // "HighJump" yeteneði iþlemleri
+    private void HandleHighJumpAbility()
+    {
+        if (highJumpCount > 0)
+        {
+            snowboard.HighJumpServerRpc();
+            highJumpCount--;
+
+            Debug.Log($"Kalan zýplama: {highJumpCount}");
+        }
+
+        if (highJumpCount == 0)
+        {
+            Debug.Log("Zýplama hakký bitti, yetenek kaldýrýlýyor.");
+            snowboard.InitialJumpServerRpc();
+            playerAbilities.RemoveAbility(3);
+            highJumpCount = 5; // Yeniden dolum için
         }
     }
 }

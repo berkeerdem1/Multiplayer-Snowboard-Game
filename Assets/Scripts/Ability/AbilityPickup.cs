@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class AbilityPickup : NetworkBehaviour
 {
-    public AbilitySO abilitySO;
+    [SerializeField] private AbilitySO abilitySO;
     [SerializeField] private SpriteRenderer sprite;
     [SerializeField] private GameObject sphere;
     Color originalColor;
@@ -35,67 +35,123 @@ public class AbilityPickup : NetworkBehaviour
     }
     private void Start()
     {
-        if (IsServer)
-        {
-            Debug.Log("Bu obje sunucu tarafýndan yönetiliyor.");
-        }
-    }
-    private void OnTriggerEnter(Collider other)
-    {
         if (!IsServer)
         {
             return;
         }
 
+        if (!TryGetComponent(out NetworkObject networkObject))
+        {
+            Debug.LogError("NetworkObject bulunamadý!");
+            return;
+        }
+        else
+        {
+            Debug.Log("NetworkObject bulundu.");
+        }
+
+        if (NetworkManager.Singleton == null)
+        {
+            Debug.LogError("NetworkManager bulunamadý!");
+        }
+        else if (!NetworkManager.Singleton.IsServer)
+        {
+            Debug.LogError("Pickup yalnýzca sunucu tarafýndan kontrol edilmelidir!");
+        }
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
         if (other.gameObject.CompareTag("Player"))
         {
             Debug.Log("Player degdi");
 
-            var networkObject = other.gameObject.GetComponentInParent<NetworkObject>();
-            if (networkObject != null && networkObject.IsOwner)
+            var networkObject = other.GetComponentInParent<NetworkObject>();
+            if (networkObject != null)
             {
-                RequestAbilityPickupServerRpc(networkObject.OwnerClientId);
+                Debug.Log("Player'da netwkObject var");
+                int abilityID = abilitySO.number;
+                if (abilityID >= 0)
+                {
+                    ulong clientId = networkObject.OwnerClientId;
+                    RequestAbilityPickupServerRpc(clientId, abilityID);
+                    Debug.Log("RequestAbilityPickupServerRpc cagirildi");
+                }
             }
         }
     }
 
     [ServerRpc(RequireOwnership = false)]
-    private void RequestAbilityPickupServerRpc(ulong clientId)
+    private void RequestAbilityPickupServerRpc(ulong clientId, int abilityID)
     {
-        // Oyuncuyu NetworkManager üzerinden bul
-        if (NetworkManager.Singleton.ConnectedClients.TryGetValue(clientId, out var client))
+        Debug.Log("RequestAbilityPickupServerRpc calisti");
+
+        Debug.Log($"ServerRpc çaðrýldý. ClientId: {clientId}, AbilityID: {abilityID}");
+
+        if (NetworkManager.Singleton.ConnectedClients.ContainsKey(clientId))
         {
-            var playerObject = client.PlayerObject;
-            if (playerObject != null)
+            GameObject player = NetworkManager.Singleton.ConnectedClients[clientId].PlayerObject.gameObject;
+            if (player != null)
             {
-                GrantAbilityToPlayer(playerObject.gameObject);
+                RequestAbilityPickupClientRpc(clientId, abilityID);
+                Debug.Log("RequestAbilityPickupClientRpc calisti");
             }
+            else
+            {
+                Debug.LogError("Oyuncu PlayerObject bulunamadý!");
+            }
+        }
+        else
+        {
+            Debug.LogError($"ClientId {clientId} ConnectedClients içinde bulunamadý!");
         }
     }
 
-    private void GrantAbilityToPlayer(GameObject player)
+    [ClientRpc]
+    private void RequestAbilityPickupClientRpc(ulong playerId, int abilityID)
+    {
+        Debug.Log($"ClientRpc çaðrýldý. PlayerId: {playerId}, AbilityID: {abilityID}");
+
+        // Oyuncuya yetenek ekleme iþlemi
+        GameObject player = NetworkManager.Singleton.LocalClient.PlayerObject.gameObject;
+        if (player != null)
+        {
+            // Oyuncuya ability ekle
+            player.GetComponentInParent<PlayerAbilities>().AddAbilityServerRpc(abilityID);
+
+            // Pickup nesnesini devre dýþý býrak
+            GrantAbilityToPlayer(player, abilityID);
+        }
+        else
+        {
+            Debug.LogError("Oyuncu bulunamadý!");
+        }
+    }
+
+    private void GrantAbilityToPlayer(GameObject player, int abilityID)
     {
         if (!IsServer) return;
 
         var playerAbilities = player.GetComponentInParent<PlayerAbilities>();
         if (playerAbilities != null)
         {
-            Debug.Log("Player" + abilitySO.abilityName + "yetenegini aldi");
-            playerAbilities.AddAbilityServerRpc(abilitySO.abilityName);
-            DisablePickupServerRpc();
+            Debug.Log($"Player {abilityID} ID'li yeteneði aldý.");
+            playerAbilities.AddAbilityServerRpc(abilityID);
+            DisablePickupServerRpc(); // Pickup nesnesini devre dýþý býrak.
         }
 
         if (abilitySO.abilityName == "Dash")
         {
-            player.GetComponentInParent<SnowboardController>().DashServerRpc();
-            player.GetComponentInParent<PlayerAbilities>().RemoveAbility(abilitySO.abilityName);
-            Debug.Log("Player dash yetenegini aldi");
-            DisablePickupServerRpc();
+            var snowboardController = player.GetComponentInParent<SnowboardController>();
+            if (snowboardController != null)
+            {
+                snowboardController.DashServerRpc();
+                Debug.Log("Dash yeteneði uygulandý.");
+            }
         }
-        
     }
 
-    [ServerRpc]
+    [ServerRpc(RequireOwnership = false)]
     private void DisablePickupServerRpc()
     {
         DisablePickupClientRpc();
@@ -113,18 +169,28 @@ public class AbilityPickup : NetworkBehaviour
 
         sphere.SetActive(false);
         gameObject.GetComponent<Collider>().enabled = false;
-        StartCoroutine(Coroutine());
+
+        // Pickup'u geri etkinleþtirme zamanlayýcýsýný yalnýzca server baþlatýr.
+        if (IsServer)
+        {
+            StartCoroutine(ReEnablePickupCoroutine());
+        }
     }
 
-    IEnumerator Coroutine()
+    IEnumerator ReEnablePickupCoroutine()
     {
         yield return new WaitForSeconds(5f);
-        EnabledPickupServerRpc();
+        EnablePickupServerRpc();
     }
 
+    [ServerRpc(RequireOwnership = false)]
+    private void EnablePickupServerRpc()
+    {
+        EnablePickupClientRpc();
+    }
 
-    [ServerRpc]
-    private void EnabledPickupServerRpc()
+    [ClientRpc]
+    private void EnablePickupClientRpc()
     {
         if (sprite != null)
         {

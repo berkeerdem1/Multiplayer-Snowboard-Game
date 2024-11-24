@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.3833273, g: 0.21158001, b: 0.24412474, a: 1}
+  m_IndirectSpecularColor: {r: 0.38353044, g: 0.21188222, b: 0.24423295, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -403,6 +403,37 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &100061857
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 100061858}
+  m_Layer: 0
+  m_Name: GameObject (4)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &100061858
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 100061857}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -39.6, y: -8.563175, z: -27.69}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 426374473}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &142842508
 GameObject:
@@ -782,7 +813,7 @@ MonoBehaviour:
   ConnectionData:
     Address: 127.0.0.1
     Port: 7777
-    ServerListenAddress: 127.0.0.1
+    ServerListenAddress: 0.0.0.0
   DebugSimulator:
     PacketDelayMS: 0
     PacketJitterMS: 0
@@ -1256,11 +1287,13 @@ MonoBehaviour:
   - {fileID: 7113934360021495435, guid: eebc6a8efa7d3b648b66fd887c89a37c, type: 3}
   - {fileID: 5401932447636222484, guid: a09af74a2a221ff4492e4478391ae552, type: 3}
   - {fileID: 8845152039509822222, guid: 5bd809a8250c22f4389cb4074ee9eb5d, type: 3}
+  - {fileID: 6534823736629124549, guid: 538f2e144c0fa6242b6481810b4bb550, type: 3}
   spawnPositions:
   - {fileID: 1797566578}
   - {fileID: 1693305511}
   - {fileID: 1652687945}
   - {fileID: 1454699334}
+  - {fileID: 100061858}
 --- !u!4 &426374473
 Transform:
   m_ObjectHideFlags: 0
@@ -1278,6 +1311,7 @@ Transform:
   - {fileID: 1693305511}
   - {fileID: 1652687945}
   - {fileID: 1454699334}
+  - {fileID: 100061858}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &641118761
