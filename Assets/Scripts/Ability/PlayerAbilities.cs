@@ -1,14 +1,14 @@
 using System.Collections;
 using System.Collections.Generic;
 using Unity.Netcode;
-using Unity.VisualScripting;
 using UnityEngine;
 
 public class PlayerAbilities : NetworkBehaviour
 {
     public AbilitySO[] allAbilities; // Tüm yeteneklerin ScriptableObject referanslarý
     [SerializeField] private List<int> abilityNumbs = new List<int>();
-    [SerializeField] private NetworkList<int> abilityIDs = new NetworkList<int>(); // Yetenek ID'lerini senkronize ediyoruz. //
+    [SerializeField] private List<int> abilityIDs = new List<int>(); // Yetenek ID'lerini senkronize ediyoruz. //
+
     private void Awake()
     {
         if (IsServer)
@@ -17,16 +17,17 @@ public class PlayerAbilities : NetworkBehaviour
         }
     }
 
-    [ServerRpc(RequireOwnership = false)]
-    public void AddAbilityServerRpc(int abilityID)
+    public void AddAbility(int abilityID)
     {
         if (!abilityIDs.Contains(abilityID))
         {
             abilityIDs.Add(abilityID);
             Debug.Log($"Yetenek ID {abilityID} oyuncuya eklendi.");
         }
-        abilityNumbs.Add(abilityID);
-
+        else
+        {
+            Debug.Log($"Yetenek ID {abilityID} zaten eklenmiþti.");
+        }
     }
 
     public bool HasAbility(int abilityID)
@@ -47,7 +48,7 @@ public class PlayerAbilities : NetworkBehaviour
 
     public void RemoveAbility(int abilityID)
     {
-        if (IsServer && abilityIDs.Contains(abilityID))
+        if (abilityIDs.Contains(abilityID))
         {
             abilityIDs.Remove(abilityID);
             

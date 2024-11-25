@@ -73,7 +73,7 @@ public class AbilityPickup : NetworkBehaviour
                 int abilityID = abilitySO.number;
                 if (abilityID >= 0)
                 {
-                    ulong clientId = networkObject.OwnerClientId;
+                    ulong clientId = networkObject.NetworkObjectId;
                     RequestAbilityPickupServerRpc(clientId, abilityID);
                     Debug.Log("RequestAbilityPickupServerRpc cagirildi");
                 }
@@ -88,22 +88,16 @@ public class AbilityPickup : NetworkBehaviour
 
         Debug.Log($"ServerRpc çaðrýldý. ClientId: {clientId}, AbilityID: {abilityID}");
 
-        if (NetworkManager.Singleton.ConnectedClients.ContainsKey(clientId))
+
+        NetworkObject playerNetworkObject = NetworkManager.Singleton.SpawnManager.SpawnedObjects[clientId];
+        if (playerNetworkObject != null)
         {
-            GameObject player = NetworkManager.Singleton.ConnectedClients[clientId].PlayerObject.gameObject;
-            if (player != null)
-            {
-                RequestAbilityPickupClientRpc(clientId, abilityID);
-                Debug.Log("RequestAbilityPickupClientRpc calisti");
-            }
-            else
-            {
-                Debug.LogError("Oyuncu PlayerObject bulunamadý!");
-            }
+            RequestAbilityPickupClientRpc(clientId, abilityID);
+            Debug.Log("RequestAbilityPickupClientRpc calisti");
         }
         else
         {
-            Debug.LogError($"ClientId {clientId} ConnectedClients içinde bulunamadý!");
+            Debug.LogError("Oyuncu PlayerObject bulunamadý!");
         }
     }
 
@@ -113,14 +107,14 @@ public class AbilityPickup : NetworkBehaviour
         Debug.Log($"ClientRpc çaðrýldý. PlayerId: {playerId}, AbilityID: {abilityID}");
 
         // Oyuncuya yetenek ekleme iþlemi
-        GameObject player = NetworkManager.Singleton.LocalClient.PlayerObject.gameObject;
-        if (player != null)
+        NetworkObject playerNetworkObject = NetworkManager.Singleton.SpawnManager.SpawnedObjects[playerId];
+        if (playerNetworkObject != null)
         {
-            // Oyuncuya ability ekle
-            player.GetComponentInParent<PlayerAbilities>().AddAbilityServerRpc(abilityID);
 
             // Pickup nesnesini devre dýþý býrak
-            GrantAbilityToPlayer(player, abilityID);
+            GrantAbilityToPlayer(playerNetworkObject, abilityID);
+            Debug.Log("GrantAbilityToPlayer cagirildi");
+
         }
         else
         {
@@ -128,15 +122,17 @@ public class AbilityPickup : NetworkBehaviour
         }
     }
 
-    private void GrantAbilityToPlayer(GameObject player, int abilityID)
+    private void GrantAbilityToPlayer(NetworkObject player, int abilityID)
     {
-        if (!IsServer) return;
+        //if (!IsServer) return;
+
+        Debug.Log("GrantAbilityToPlayer calisti");
 
         var playerAbilities = player.GetComponentInParent<PlayerAbilities>();
         if (playerAbilities != null)
         {
             Debug.Log($"Player {abilityID} ID'li yeteneði aldý.");
-            playerAbilities.AddAbilityServerRpc(abilityID);
+            playerAbilities.AddAbility(abilityID);
             DisablePickupServerRpc(); // Pickup nesnesini devre dýþý býrak.
         }
 
@@ -145,8 +141,9 @@ public class AbilityPickup : NetworkBehaviour
             var snowboardController = player.GetComponentInParent<SnowboardController>();
             if (snowboardController != null)
             {
-                snowboardController.DashServerRpc();
+                snowboardController.Dash();
                 Debug.Log("Dash yeteneði uygulandý.");
+                playerAbilities.RemoveAbility(abilityID);
             }
         }
     }

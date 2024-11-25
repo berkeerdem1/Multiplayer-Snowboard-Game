@@ -318,14 +318,13 @@ public class SnowboardController : NetworkBehaviour
     }
 
 
-    [ServerRpc]
-    public void ShootServerRpc()
+    public void Shoot()    
     {
         // Mermiyi doðru bir rotasyonla spawnlayýn.
-        GameObject newBullet =Instantiate(bullerPrefab, firePoint.position, firePoint.rotation);
-        NetworkObject networkObject = newBullet.GetComponent<NetworkObject>();
-        networkObject.Spawn();
-        //NetworkObject networkObject = NetworkedObjectPool.Instance.GetFromPool(position, rotation);
+        //GameObject newBullet =Instantiate(bullerPrefab, firePoint.position, firePoint.rotation);
+        //NetworkObject networkObject = newBullet.GetComponent<NetworkObject>();
+        //networkObject.Spawn();
+        NetworkObject networkObject = NetworkedObjectPool.Instance.GetFromPool(firePoint.position, firePoint.rotation);
 
         // Rigidbody bileþenine eriþip hýzý ayarlayýn.
         Rigidbody rb = networkObject.GetComponent<Rigidbody>();
@@ -347,10 +346,8 @@ public class SnowboardController : NetworkBehaviour
     }
 
 
-    [ServerRpc(RequireOwnership = false)]
-    public void ShieldServerRpc()
+    public void Shield()
     {
-        if (!IsOwner) return;
 
         shield.SetActive(true);
         StartCoroutine(Coroutine());
@@ -365,10 +362,8 @@ public class SnowboardController : NetworkBehaviour
         shield.SetActive(false);
     }
 
-    [ServerRpc(RequireOwnership = false)]
-    public void DashServerRpc()
+    public void Dash()
     {
-        if (isDashing) return; 
         isDashing = true;
 
         rb.AddForce(frontPoint.forward * dashForce, ForceMode.Impulse);
@@ -382,15 +377,13 @@ public class SnowboardController : NetworkBehaviour
         rb.velocity = Vector3.zero; // Dash bittikten sonra hýzý sýfýrla
     }
 
-    [ServerRpc]
-    public void HighJumpServerRpc()
+    public void HighJump()
     {
         jumpForce = 20;
         gravityScale = 20;
     }
 
-    [ServerRpc]
-    public void InitialJumpServerRpc()
+    public void InitialJump()
     {
         jumpForce = 10;
     }

@@ -28,22 +28,22 @@ public class Bullett : NetworkBehaviour
 
             Debug.Log("Mermi: Oyuncuya hasar verme fonksiyonunu cagirdim!");
 
-            //ReturnToPool();
+            ReturnToPool();
 
-            if (GetComponent<NetworkObject>().IsSpawned)
-            {
-                GetComponent<NetworkObject>().Despawn(); // NetworkObject'in despawn edilmesi
-            }
-            else
-            {
-                Destroy(gameObject); // Fallback olarak normal yok etme
-            }
+            //if (GetComponent<NetworkObject>().IsSpawned)
+            //{
+            //    GetComponent<NetworkObject>().Despawn(); // NetworkObject'in despawn edilmesi
+            //}
+            //else
+            //{
+            //    Destroy(gameObject); // Fallback olarak normal yok etme
+            //}
         }
 
         if (collision.gameObject.CompareTag("Shield")) // Çarptýðý nesne bir kalkan ise
         {
             Debug.Log("Mermi: Kalkana Deðdim!");
-            //ReturnToPool();
+            ReturnToPool();
         }
     }
 
@@ -56,16 +56,16 @@ public class Bullett : NetworkBehaviour
     {
         yield return new WaitForSeconds(lifeTimer);
 
-        //ReturnToPool();
+        ReturnToPool();
 
-        if (GetComponent<NetworkObject>().IsSpawned)
-        {
-            GetComponent<NetworkObject>().Despawn(); // NetworkObject'in despawn edilmesi
-        }
-        else
-        {
-            Destroy(gameObject); // Fallback olarak normal yok etme
-        }
+        //if (GetComponent<NetworkObject>().IsSpawned)
+        //{
+        //    GetComponent<NetworkObject>().Despawn(); // NetworkObject'in despawn edilmesi
+        //}
+        //else
+        //{
+        //    Destroy(gameObject); // Fallback olarak normal yok etme
+        //}
     }
 
 }

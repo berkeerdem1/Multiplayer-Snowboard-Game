@@ -42,17 +42,21 @@ public class PlayerAbilityUsage : NetworkBehaviour
         if (playerAbilities.HasAbility(abilityNumber))
         {
             Debug.Log($"{abilityNumber} kullanýldý, Player ID: {OwnerClientId}");
-            UseAbilityServerRpc(abilityNumber);
+            UseAbilityManager(abilityNumber);
         }
         else
         {
             Debug.Log($"Player {OwnerClientId} yeteneði yok: {abilityNumber}");
         }
     }
-
-    [ServerRpc(RequireOwnership = false)]
-    private void UseAbilityServerRpc(int abilityNumb)
+    private void UseAbilityManager(int abilityNumb)
     {
+        if (!playerAbilities.HasAbility(abilityNumb))
+        {
+            Debug.LogWarning($"Player {OwnerClientId}, {abilityNumb} yeteneðine sahip deðil!");
+            return;
+        }
+
         Debug.Log($"Server: {abilityNumb} yeteneði aktif edildi, Player ID: {OwnerClientId}");
 
         // Yetenekler üzerinde iþlem yap
@@ -81,7 +85,7 @@ public class PlayerAbilityUsage : NetworkBehaviour
     {
         if (bulletCount > 0)
         {
-            snowboard.ShootServerRpc();
+            snowboard.Shoot();
             bulletCount--;
 
             Debug.Log($"Kalan mermi: {bulletCount}");
@@ -98,7 +102,7 @@ public class PlayerAbilityUsage : NetworkBehaviour
     // "Shield" yeteneði iþlemleri
     private void HandleShieldAbility()
     {
-        snowboard.ShieldServerRpc();
+        snowboard.Shield();
         Debug.Log("Shield etkinleþtirildi.");
         playerAbilities.RemoveAbility(2);
     }
@@ -108,7 +112,7 @@ public class PlayerAbilityUsage : NetworkBehaviour
     {
         if (highJumpCount > 0)
         {
-            snowboard.HighJumpServerRpc();
+            snowboard.HighJump();
             highJumpCount--;
 
             Debug.Log($"Kalan zýplama: {highJumpCount}");
@@ -117,7 +121,7 @@ public class PlayerAbilityUsage : NetworkBehaviour
         if (highJumpCount == 0)
         {
             Debug.Log("Zýplama hakký bitti, yetenek kaldýrýlýyor.");
-            snowboard.InitialJumpServerRpc();
+            snowboard.InitialJump();
             playerAbilities.RemoveAbility(3);
             highJumpCount = 5; // Yeniden dolum için
         }
