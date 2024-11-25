@@ -35,7 +35,17 @@ public class SnowboardController : NetworkBehaviour
     private float jumpForce = 10;
 
 
-   [SerializeField] private float groundCheckDistance = 0.2f; // Yerden mesafeyi kontrol etmek için raycast mesafesi
+    [SerializeField] private AudioSource audio; // Motor sesi AudioSource
+    [SerializeField] private float maxVolume = 1f;    // Maksimum ses seviyesi
+    [SerializeField] private float volumeChangeRate = 2f; // Ses seviyesinin deðiþim hýzý
+
+    [SerializeField] private float playInterval = 0.2f; // Sesin ne sýklýkta çalýnacaðý (saniye)
+    private float currentVolume; // Anlýk ses seviyesi
+
+    private float lastPlayTime; // Son ses çalma zamaný
+
+
+    [SerializeField] private float groundCheckDistance = 0.2f; // Yerden mesafeyi kontrol etmek için raycast mesafesi
     [SerializeField] private LayerMask groundLayer;           // Yalnýzca zemin katmanýný kontrol etmek için
     private bool isGrounded = false;        // Yerle temas durumunu saklar
 
@@ -85,9 +95,15 @@ public class SnowboardController : NetworkBehaviour
             Debug.Log("Bu obje istemci tarafýnda spawn oldu.");
         }
     }
+
+    private void Awake()
+    {
+        audio = GetComponent<AudioSource>();
+        rb = GetComponent<Rigidbody>();
+
+    }
     private void Start()
     {
-        rb = GetComponent<Rigidbody>();
         //trail = GetComponentInChildren<TrailRenderer>();
         //trail.startWidth = 2f;
         shield.SetActive(false);
@@ -182,6 +198,7 @@ public class SnowboardController : NetworkBehaviour
         Somersault();
         Slope();
         CheckGround();
+        PlaySkiingSound();
 
         Debug.DrawRay(firePoint.position, firePoint.forward * 5, Color.red, 2f);
 
@@ -294,6 +311,46 @@ public class SnowboardController : NetworkBehaviour
         gravityScale = 20;
     }
 
+
+    private void PlaySkiingSound()
+    {
+        if (audio == null) return;
+
+
+        if (!isGrounded)
+        {
+            currentVolume = Mathf.Lerp(currentVolume, 0f, Time.deltaTime * 1f);
+        }
+        else
+        {
+            // Yerdeyken throttle ile ses seviyesi belirle
+            currentVolume = Mathf.Lerp(currentVolume, Mathf.Lerp(0f, maxVolume, throttle), Time.deltaTime * 1f);
+        }
+
+        if (audio == null) return;
+
+        if (throttle > 0)
+        {
+            // Ses seviyesini throttle ile iliþkilendir
+            audio.volume = Mathf.Lerp(audio.volume, throttle * maxVolume, volumeChangeRate * Time.deltaTime);
+
+            // Eðer ses çalmýyorsa baþlat
+            if (!audio.isPlaying)
+            {
+                audio.Play();
+            }
+        }
+        else
+        {
+            // Ses seviyesini kademeli olarak azalt ve sýfýr olduðunda durdur
+            audio.volume = Mathf.Lerp(audio.volume, 0f, volumeChangeRate * Time.deltaTime);
+            if (audio.volume <= 0.01f)
+            {
+                audio.Stop();
+            }
+        }
+
+    }
     void OnCollisionStay(Collision collision)
     {
         if (collision.gameObject.layer == LayerMask.NameToLayer("Ground"))
@@ -316,6 +373,8 @@ public class SnowboardController : NetworkBehaviour
             isGrounded = false;
         }
     }
+
+
 
 
     public void Shoot()    

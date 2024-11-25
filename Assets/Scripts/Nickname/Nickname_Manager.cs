@@ -11,6 +11,7 @@ public class Nickname_Manager : MonoBehaviour
     [SerializeField] private InputField nicknameInputField;
     [SerializeField] private GameObject nicknamePanel;      
     [SerializeField] private GameObject otherButtonsPanel;
+    [SerializeField] private GameObject playButton;
     public string nickname;
 
     [SerializeField]
@@ -22,7 +23,14 @@ public class Nickname_Manager : MonoBehaviour
     }
     private void Start()
     {
+        nicknamePanel.SetActive(false);
         otherButtonsPanel.SetActive(false);
+    }
+
+    public void PlayGame()
+    {
+        playButton.SetActive(false);
+        nicknamePanel.SetActive(true);
     }
 
     public void SaveNickname()
@@ -42,5 +50,12 @@ public class Nickname_Manager : MonoBehaviour
     public void SetNickname(string newNickname)
     {
         nickname = newNickname;
+    }
+
+    public void ResetPanels()
+    {
+        otherButtonsPanel.SetActive(false);
+        nicknamePanel.SetActive(false);
+        playButton.SetActive(true);
     }
 }

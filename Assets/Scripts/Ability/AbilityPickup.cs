@@ -9,6 +9,8 @@ public class AbilityPickup : NetworkBehaviour
     [SerializeField] private GameObject sphere;
     Color originalColor;
 
+    private AudioSource _audo;
+    [SerializeField] private AudioClip pickUpAudio;
     public override void OnNetworkSpawn()
     {
         if (IsServer)
@@ -27,6 +29,7 @@ public class AbilityPickup : NetworkBehaviour
 
     private void Awake()
     {
+        _audo = GetComponent<AudioSource>();
         sprite = transform.GetChild(0).GetComponent<SpriteRenderer>();
         if (sprite != null)
         {
@@ -78,6 +81,7 @@ public class AbilityPickup : NetworkBehaviour
                     Debug.Log("RequestAbilityPickupServerRpc cagirildi");
                 }
             }
+            _audo.PlayOneShot(pickUpAudio);
         }
     }
 

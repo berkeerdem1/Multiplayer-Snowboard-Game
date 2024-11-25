@@ -4,6 +4,8 @@ using Unity.Collections;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.UI;
+using Unity.Netcode;
+
 
 public class UI_Manager : MonoBehaviour
 {
@@ -11,6 +13,9 @@ public class UI_Manager : MonoBehaviour
 
     public GameObject nicknamePanel;   // Nickname'lerin gösterileceði panel
     public GameObject nicknamePrefab; // Her oyuncu için oluþturulacak Text prefab'i
+
+    [SerializeField] private GameObject pausePanel;
+    [SerializeField] private GameObject leaveServerButton;
 
     private List<GameObject> nicknameObjects = new List<GameObject>();
 
@@ -30,7 +35,59 @@ public class UI_Manager : MonoBehaviour
     private void Start()
     {
         nicknamePanel.SetActive(false);
+        pausePanel.SetActive(false);
         InvokeRepeating(nameof(UpdateNicknamePanel), 0f, 5f); // 5 saniyede bir paneli güncelle
+    }
+
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.P))
+        {
+            TogglePausePanel();
+        }
+    }
+
+    private void TogglePausePanel()
+    {
+        pausePanel.SetActive(!pausePanel.activeSelf);
+    }
+
+    public void LeaveServerButton()
+    {
+        if (NetworkManager.Singleton != null)
+        {
+            NetworkManager.Singleton.Shutdown();
+            // Oyuncunun baðlantýsýný kes
+
+            Debug.Log("Oyuncu serverdan ayrýldý.");
+            pausePanel.SetActive(false);
+            Nickname_Manager.Instance.ResetPanels();
+        }
+        else
+        {
+            Debug.LogError("NetworkManager mevcut deðil!");
+        }
+
+        // Oyuncunun ana menüye yönlendirilmesi gibi baþka iþlemler
+        // SceneManager.LoadScene("MainMenu");
+    }
+
+    public void QuitButton()
+    {
+        if (NetworkManager.Singleton != null)
+        {
+            NetworkManager.Singleton.Shutdown();
+            Debug.Log("Oyuncu oyundan cikti.");
+            pausePanel.SetActive(false);
+            Application.Quit();
+        }
+        else
+        {
+            Debug.LogError("NetworkManager mevcut deðil!");
+        }
+
+        // Oyuncunun ana menüye yönlendirilmesi gibi baþka iþlemler
+        // SceneManager.LoadScene("MainMenu");
     }
 
     public void UpdateNicknamePanel()
