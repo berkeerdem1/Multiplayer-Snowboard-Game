@@ -25,6 +25,15 @@ public class SnowboardController : NetworkBehaviour
     [SerializeField] private GameObject bullerPrefab;
     [SerializeField] private float bulletSpeed;
 
+    private Vector3[] flipDirections = new Vector3[]
+    {
+        Vector3.forward,  // Öne takla
+        Vector3.back,     // Arkaya takla
+        Vector3.left,     // Sola takla
+        Vector3.right,    // Saða takla
+    };
+
+
     [SerializeField] private GameObject shield;
 
     [SerializeField] private float dashForce = 10f; // Dash gücü
@@ -48,6 +57,8 @@ public class SnowboardController : NetworkBehaviour
     [SerializeField] private float groundCheckDistance = 0.2f; // Yerden mesafeyi kontrol etmek için raycast mesafesi
     [SerializeField] private LayerMask groundLayer;           // Yalnýzca zemin katmanýný kontrol etmek için
     private bool isGrounded = false;        // Yerle temas durumunu saklar
+
+    public bool SetFlippingState = false;
 
     private bool controlsEnabled = true;
     private float throttle = 0f; // Hýzlanma faktörü
@@ -268,16 +279,37 @@ public class SnowboardController : NetworkBehaviour
     private void Somersault()
     {
         // 7. Ters dönme durumu
-        if (Vector3.Dot(transform.up, Vector3.up) < 0.5f && CheckGround()) // Araba yaklaþýk olarak ters dönmüþse
+        if (/*Vector3.Dot(transform.up, Vector3.up) < 0.5f &&*/ CheckGround()) // Araba yaklaþýk olarak ters dönmüþse
         {
             // Kullanýcý belirli bir tuþa bastýðýnda takla atmayý tetikle
             if (Input.GetKeyDown(KeyCode.LeftShift)) // "R" tuþu düzelme için örnek
             {
-                // Ters dönmeyi düzeltmek için yukarý doðru bir kuvvet uygula
-                rb.AddForce(Vector3.up * 10f, ForceMode.Impulse); // Zýplama kuvveti
-                rb.AddTorque(transform.right * 30f, ForceMode.Impulse); // Takla için tork kuvveti
+                PerformRandomFlip();
             }
         }
+
+        // Zeminle temas saðlandýðýnda takla durumunu devre dýþý býrak
+        if (isGrounded)
+        {
+            SetFlippingState = false;
+        }
+        else
+        {
+            SetFlippingState = true;
+
+        }
+    }
+
+    void PerformRandomFlip()
+    {
+        // Rastgele bir yön seç
+        Vector3 randomDirection = flipDirections[Random.Range(0, flipDirections.Length)];
+
+        // Yukarý doðru bir zýplama kuvveti uygula
+        rb.AddForce(Vector3.up * 10f, ForceMode.Impulse);
+
+        // Rastgele bir yönde tork uygula
+        rb.AddTorque(randomDirection * 20f, ForceMode.Impulse);
     }
 
     private void Slope()

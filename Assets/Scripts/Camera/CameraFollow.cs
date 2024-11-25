@@ -9,6 +9,7 @@ public class CameraFollow : MonoBehaviour
     public float followSpeed = 10f; // Pozisyon takip hýzý
     public float heightLock = 5f; // Kameranýn sabit yükseklik deðeri
     private SnowboardController snowboard;
+    public float smoothness = 0.125f; // Pozisyon geçiþ yumuþatma faktörü
 
     private void Awake()
     {
@@ -39,23 +40,35 @@ public class CameraFollow : MonoBehaviour
             //}
             return;
         }
-        
 
-        // Kameranýn hedef pozisyonunu hesapla
-        Vector3 desiredPosition = target.position + target.rotation * offset;
+        Vector3 desiredPosition ;
 
-        // Yükseklik sabitleme kontrolü
-        // Eðer araba alçalmýyor, yükselmiyor veya ters dönmemiþse, kameranýn yüksekliðini sabit tut
-        if (Vector3.Dot(target.up, Vector3.up) < 0.5f) // Araba ters dönmüþse
+        if (target.GetComponent<SnowboardController>().SetFlippingState)
         {
-            desiredPosition.y = heightLock; // Sabit yüksekliði uygula
+            desiredPosition = target.position + offset;
         }
         else
         {
-            // Arabanýn pozisyonuna dinamik olarak uyum saðlar
-            desiredPosition.y = Mathf.Lerp(transform.position.y, target.position.y + offset.y, followSpeed * Time.deltaTime);
+            desiredPosition = target.position + target.rotation * offset;
         }
 
+
+        // Kameranýn hedef pozisyonunu hesapla
+        
+
+        // Yükseklik sabitleme kontrolü
+        // Eðer araba alçalmýyor, yükselmiyor veya ters dönmemiþse, kameranýn yüksekliðini sabit tut
+        //if (Vector3.Dot(target.up, Vector3.up) < 0.5f) // Araba ters dönmüþse
+        //{
+        //    desiredPosition.y = heightLock; // Sabit yüksekliði uygula
+        //}
+        //else
+        //{
+        //    // Arabanýn pozisyonuna dinamik olarak uyum saðlar
+        //    desiredPosition.y = Mathf.Lerp(transform.position.y, target.position.y + offset.y, followSpeed * Time.deltaTime);
+        //}
+
+        desiredPosition.y = Mathf.Lerp(transform.position.y, target.position.y + offset.y, followSpeed * Time.deltaTime);
         // Kamerayý hedef pozisyona yumuþakça hareket ettir
         transform.position = Vector3.Lerp(transform.position, desiredPosition, followSpeed * Time.deltaTime);
 
@@ -63,5 +76,7 @@ public class CameraFollow : MonoBehaviour
         Vector3 lookAtPosition = target.position;
         lookAtPosition.y = transform.position.y; // Y ekseninde kamerayý sabit tutar
         transform.LookAt(lookAtPosition);
+
+       
     }
 }
