@@ -687,6 +687,7 @@ GameObject:
   - component: {fileID: 7548144307615288495}
   - component: {fileID: 242293807251473915}
   - component: {fileID: 8323146647437165996}
+  - component: {fileID: 2412769411550632019}
   m_Layer: 6
   m_Name: Shield
   m_TagString: Shield
@@ -780,6 +781,33 @@ SphereCollider:
   serializedVersion: 3
   m_Radius: 0.5000001
   m_Center: {x: -0.00018310551, y: 0, z: -0.00018310553}
+--- !u!54 &2412769411550632019
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1845241147015993129}
+  serializedVersion: 4
+  m_Mass: 1
+  m_Drag: 0
+  m_AngularDrag: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
 --- !u!1 &2144342857463697866
 GameObject:
   m_ObjectHideFlags: 0
@@ -1089,6 +1117,7 @@ SkinnedMeshRenderer:
   m_RendererPriority: 0
   m_Materials:
   - {fileID: 2100000, guid: 86e34d2d85ab146498d323fbdebeb789, type: 2}
+  - {fileID: 2100000, guid: c420db33b118e9947b4061e872b52c69, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1822,6 +1851,7 @@ SkinnedMeshRenderer:
   m_RendererPriority: 0
   m_Materials:
   - {fileID: -5209150659612451695, guid: 7966d979d9982a743a30e3b75a402b94, type: 3}
+  - {fileID: 2100000, guid: c420db33b118e9947b4061e872b52c69, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -2251,6 +2281,37 @@ Transform:
   - {fileID: 4266279553650883799}
   m_Father: {fileID: 1932313729267363062}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &5227156124460310366
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4765437160132478475}
+  m_Layer: 0
+  m_Name: GameObject
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4765437160132478475
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5227156124460310366}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 1.41, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 579943248847617928}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &5247921674018230114
 GameObject:
   m_ObjectHideFlags: 0
@@ -2304,6 +2365,7 @@ SkinnedMeshRenderer:
   m_RendererPriority: 0
   m_Materials:
   - {fileID: 2100000, guid: 86e34d2d85ab146498d323fbdebeb789, type: 2}
+  - {fileID: 2100000, guid: c420db33b118e9947b4061e872b52c69, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -2449,7 +2511,6 @@ GameObject:
   - component: {fileID: 4250863556352080462}
   - component: {fileID: 968644081027142219}
   - component: {fileID: 1266472291815601952}
-  - component: {fileID: 6411094426107196215}
   - component: {fileID: 5461792175831917413}
   - component: {fileID: 6006958729080570612}
   - component: {fileID: 7050746820375751861}
@@ -2481,6 +2542,7 @@ Transform:
   - {fileID: 169433421909833558}
   - {fileID: 1403753839540953044}
   - {fileID: 4500975456810878513}
+  - {fileID: 4765437160132478475}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &1005896039073415751
@@ -2512,6 +2574,7 @@ MeshRenderer:
   m_RendererPriority: 0
   m_Materials:
   - {fileID: 2100000, guid: e18e7a07651f38c4db450eb659aaa3b6, type: 2}
+  - {fileID: 2100000, guid: c420db33b118e9947b4061e872b52c69, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -2686,23 +2749,7 @@ MonoBehaviour:
   playerDefaultLocalRotation: {x: 0, y: 0, z: 0, w: 1}
   rotationLerpSpeed: 30
   playerOffset: {x: 0, y: -0.2, z: -0.6}
---- !u!114 &6411094426107196215
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5414990107229287165}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cc48167a7fed6f54dabfc5769fa5f14a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  pathPoints: []
-  maxDistance: 15
-  returnTime: 10
-  isInRace: 0
-  returnTimeText: {fileID: 7714654779183730577}
+  shieldPos: {fileID: 4500975456810878513}
 --- !u!114 &5461792175831917413
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.UIElements;
+using static UnityEngine.Rendering.DebugUI;
 
 public class SnowboardController : NetworkBehaviour
 {
@@ -25,7 +26,6 @@ public class SnowboardController : NetworkBehaviour
     [SerializeField] private float bulletSpeed;
 
     [SerializeField] private GameObject shield;
-
 
     [SerializeField] private float dashForce = 10f; // Dash gücü
     [SerializeField] private float dashDuration = 0.2f; // Dash süresi

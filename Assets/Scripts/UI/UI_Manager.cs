@@ -19,6 +19,7 @@ public class UI_Manager : MonoBehaviour
 
     private List<GameObject> nicknameObjects = new List<GameObject>();
 
+
     GameObject newNickname;
     private void Awake()
     {
