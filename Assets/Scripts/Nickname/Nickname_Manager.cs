@@ -54,8 +54,8 @@ public class Nickname_Manager : MonoBehaviour
 
     public void ResetPanels()
     {
-        otherButtonsPanel.SetActive(false);
+        otherButtonsPanel.SetActive(true);
         nicknamePanel.SetActive(false);
-        playButton.SetActive(true);
+        playButton.SetActive(false);
     }
 }

@@ -95,7 +95,7 @@ public class PlayersNickname_Controller : NetworkBehaviour
         return nicknames;
     }
 
-    public void RemoveNickName(string nickname)
+    public void RemoveNickName(FixedString32Bytes nickname)
     {
         playerNicknames.Remove(nickname);
     }

@@ -11,6 +11,7 @@ public class CameraFollow : MonoBehaviour
     private SnowboardController snowboard;
     public float smoothness = 0.125f; // Pozisyon geçiþ yumuþatma faktörü
 
+    float playerGroundTimer = 0f;
     private void Awake()
     {
         snowboard = new SnowboardController();
@@ -49,6 +50,20 @@ public class CameraFollow : MonoBehaviour
         }
         else
         {
+            desiredPosition = target.position + target.rotation * offset;
+        }
+
+        if (!target.GetComponent<SnowboardController>().CheckGround())
+        {
+            playerGroundTimer += Time.deltaTime;
+            if (playerGroundTimer >= 2f)
+            {
+                desiredPosition = target.position + offset;
+            }
+        }
+        else
+        {
+            playerGroundTimer = 0f;
             desiredPosition = target.position + target.rotation * offset;
         }
 

@@ -4,12 +4,26 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
+
+    public static GameManager Instance;
+
     private AudioSource _audio;
     [SerializeField] private AudioClip _startAudio, _background;
+
+    public bool isInGame = false;
 
     private void Awake()
     {
         _audio = GetComponent<AudioSource>();
+
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+        }
+        else
+        {
+            Instance = this;
+        }
     }
     void Start()
     {

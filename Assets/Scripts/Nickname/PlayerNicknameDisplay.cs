@@ -87,7 +87,9 @@ public class PlayerNicknameDisplay : NetworkBehaviour
     {
         if (IsOwner)
         {
-            Destroy(nicknameText.gameObject);
+            FixedString32Bytes nickname = Nickname_Manager.Instance.nickname;
+            //PlayersNickname_Controller.Instance.RemoveNickName(nickname);
+            UI_Manager.Instance.RemovePlayerNickName(gameObject);
         }
     }
 }

@@ -861,11 +861,14 @@ MonoBehaviour:
   CameraPrefab: {fileID: 8069668948580143406, guid: c8bdcafd803de1a448883b8a2d70acb9, type: 3}
   firePoint: {fileID: 7011361598871292917}
   bullerPrefab: {fileID: 7643055386187393687, guid: 09077c54645a8be47b55009e4c31f6c1, type: 3}
-  bulletSpeed: 30
+  bulletSpeed: 45
   shield: {fileID: 8264190776030515887}
   dashForce: 80
   dashDuration: 2
   jumpForce: 10
+  dashSudio: {fileID: 8300000, guid: c7a0c07b3ebcebf40984d200a8ec7016, type: 3}
+  shieldActiveAudio: {fileID: 8300000, guid: f35abba25b5fa9f4c9953d0c65b127e5, type: 3}
+  hurtAudio: {fileID: 8300000, guid: 7bea80a5b49d8d845adb4b000eecee88, type: 3}
   audio: {fileID: 7049702373254865527}
   maxVolume: 1
   volumeChangeRate: 2
@@ -874,6 +877,7 @@ MonoBehaviour:
   groundLayer:
     serializedVersion: 2
     m_Bits: 8
+  SetFlippingState: 0
 --- !u!114 &3068260436775547895
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -918,6 +922,7 @@ MonoBehaviour:
   playerDefaultLocalRotation: {x: 0, y: 0, z: 0, w: 1}
   rotationLerpSpeed: 30
   playerOffset: {x: 0, y: 0, z: -0.25}
+  playerShieldOffset: {x: 0, y: 1, z: 0}
   shieldPos: {fileID: 1102789274598977237}
 --- !u!114 &3162372292032558641
 MonoBehaviour:
@@ -3023,7 +3028,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_FontData:
-    m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
+    m_Font: {fileID: 12800000, guid: efbeab27c07db31418e2218d792a2aa4, type: 3}
     m_FontSize: 14
     m_FontStyle: 0
     m_BestFit: 0

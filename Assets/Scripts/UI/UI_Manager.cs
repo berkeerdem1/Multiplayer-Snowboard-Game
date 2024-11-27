@@ -5,6 +5,8 @@ using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.UI;
 using Unity.Netcode;
+using DG.Tweening;
+using TMPro;
 
 
 public class UI_Manager : MonoBehaviour
@@ -16,8 +18,13 @@ public class UI_Manager : MonoBehaviour
 
     [SerializeField] private GameObject pausePanel;
     [SerializeField] private GameObject leaveServerButton;
+    [SerializeField] private GameObject controlsPanel;
+    [SerializeField] private GameObject title;
+    [SerializeField] private RectTransform titleObject;
+    [SerializeField] private Transform targetPos;
+    [SerializeField] private float duration = 1f;
 
-    private List<GameObject> nicknameObjects = new List<GameObject>();
+   private List<GameObject> nicknameObjects = new List<GameObject>();
 
 
     GameObject newNickname;
@@ -37,15 +44,46 @@ public class UI_Manager : MonoBehaviour
     {
         nicknamePanel.SetActive(false);
         pausePanel.SetActive(false);
+        controlsPanel.SetActive(false);
         InvokeRepeating(nameof(UpdateNicknamePanel), 0f, 5f); // 5 saniyede bir paneli güncelle
+        MoveUIObject();
     }
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.P))
+        if ((Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.P)) && GameManager.Instance.isInGame)
         {
             TogglePausePanel();
         }
+    }
+
+    void MoveUIObject()
+    {
+        // Dünya pozisyonunu (world position) anchor pozisyona dönüþtür
+        Vector2 targetAnchorPos = titleObject.parent.InverseTransformPoint(targetPos.position);
+
+        // UI objesini anchor pozisyonuna taþý
+        titleObject.DOAnchorPos(targetAnchorPos, duration).SetEase(Ease.InOutElastic);
+    }
+
+    public void ToggleTitle()
+    {
+        title.SetActive(!title.activeSelf);
+
+    }
+    public void ControlsButton()
+    {
+        ToggleContolsPanel();
+    }
+
+    public void ReturnPausePanelButton()
+    {
+        ToggleContolsPanel();
+    }
+
+    private void ToggleContolsPanel()
+    {
+        controlsPanel.SetActive(!controlsPanel.activeSelf);
     }
 
     private void TogglePausePanel()
@@ -63,6 +101,8 @@ public class UI_Manager : MonoBehaviour
             Debug.Log("Oyuncu serverdan ayrýldý.");
             pausePanel.SetActive(false);
             Nickname_Manager.Instance.ResetPanels();
+            ToggleTitle();
+            GameManager.Instance.isInGame = false;
         }
         else
         {
@@ -78,6 +118,7 @@ public class UI_Manager : MonoBehaviour
         if (NetworkManager.Singleton != null)
         {
             NetworkManager.Singleton.Shutdown();
+            GameManager.Instance.isInGame = false;
             Debug.Log("Oyuncu oyundan cikti.");
             pausePanel.SetActive(false);
             Application.Quit();

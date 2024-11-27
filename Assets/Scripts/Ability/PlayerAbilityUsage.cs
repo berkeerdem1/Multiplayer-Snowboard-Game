@@ -7,8 +7,8 @@ public class PlayerAbilityUsage : NetworkBehaviour
     private SnowboardController snowboard;
 
     // Yetenek limitleri
-    private int bulletCount = 3;
-    private int highJumpCount = 5;
+    private int bulletCount = 6;
+    private int highJumpCount = 8;
 
     private void Start()
     {

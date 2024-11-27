@@ -7,7 +7,14 @@ public class Bullett : NetworkBehaviour
 {
 
     private float lifeTimer = 8F;
+    [SerializeField] private AudioClip shieldDamageAudio;
+    private AudioSource _audio;
 
+
+    private void Awake()
+    {
+        _audio = GetComponent<AudioSource>();
+    }
 
     private void Start()
     {
@@ -42,6 +49,8 @@ public class Bullett : NetworkBehaviour
 
         if (collision.gameObject.CompareTag("Shield")) // Çarptýðý nesne bir kalkan ise
         {
+            _audio.Stop();
+            _audio.PlayOneShot(shieldDamageAudio);
             Debug.Log("Mermi: Kalkana Deðdim!");
             ReturnToPool();
         }

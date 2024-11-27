@@ -58,6 +58,8 @@ public class RelayManager : MonoBehaviour
         }
 
         otherButtonsPanel.SetActive(false);
+        UI_Manager.Instance.ToggleTitle();
+        GameManager.Instance.isInGame = true;
     }
 
     public async void JoinRelay(string joinCode)
@@ -97,6 +99,8 @@ public class RelayManager : MonoBehaviour
         }
 
         otherButtonsPanel.SetActive(false);
+        UI_Manager.Instance.ToggleTitle();
+        GameManager.Instance.isInGame = true;
     }
 }
 

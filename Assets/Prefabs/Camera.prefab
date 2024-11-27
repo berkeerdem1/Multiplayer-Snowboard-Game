@@ -83,7 +83,7 @@ Camera:
   m_AllowMSAA: 1
   m_AllowDynamicResolution: 0
   m_ForceIntoRT: 0
-  m_OcclusionCulling: 1
+  m_OcclusionCulling: 0
   m_StereoConvergence: 10
   m_StereoSeparation: 0.022
 --- !u!81 &3553366124654163506
@@ -153,3 +153,4 @@ MonoBehaviour:
   offset: {x: 10, y: 4.63, z: 0}
   followSpeed: 20
   heightLock: 5
+  smoothness: 0.125

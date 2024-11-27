@@ -2,8 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
-using UnityEngine.UIElements;
-using static UnityEngine.Rendering.DebugUI;
 
 public class SnowboardController : NetworkBehaviour
 {
@@ -43,7 +41,7 @@ public class SnowboardController : NetworkBehaviour
     [SerializeField]
     private float jumpForce = 10;
 
-
+    [SerializeField] private AudioClip dashSudio, shieldActiveAudio, hurtAudio;
     [SerializeField] private AudioSource audio; // Motor sesi AudioSource
     [SerializeField] private float maxVolume = 1f;    // Maksimum ses seviyesi
     [SerializeField] private float volumeChangeRate = 2f; // Ses seviyesinin deðiþim hýzý
@@ -383,6 +381,40 @@ public class SnowboardController : NetworkBehaviour
         }
 
     }
+
+    public void PlayTemporarySound(AudioClip tempClip)
+    {
+        if (audio == null || tempClip == null) return;
+
+        // Mevcut sesi yedekle
+        AudioClip originalClip = audio.clip;
+        bool wasPlaying = audio.isPlaying;
+
+        // Çalan sesi durdur
+        audio.Stop();
+
+        // PlayOneShot ile geçici sesi çal
+        audio.PlayOneShot(tempClip);
+
+        // Geçici sesin uzunluðu kadar bekleyip eski sesi geri yükle
+        StartCoroutine(RestoreOriginalSound(originalClip, wasPlaying, tempClip.length));
+    }
+
+    private IEnumerator RestoreOriginalSound(AudioClip originalClip, bool wasPlaying, float delay)
+    {
+        // Geçici sesin süresi kadar bekle
+        yield return new WaitForSeconds(delay);
+
+        // Orijinal sesi geri yükle
+        audio.clip = originalClip;
+
+        // Eðer eski ses çalýyorsa devam ettir
+        if (wasPlaying && originalClip != null)
+        {
+            audio.Play();
+        }
+    }
+
     void OnCollisionStay(Collision collision)
     {
         if (collision.gameObject.layer == LayerMask.NameToLayer("Ground"))
@@ -428,6 +460,8 @@ public class SnowboardController : NetworkBehaviour
     {
         if (!IsOwner) return;
 
+        PlayTemporarySound(hurtAudio);
+
         Debug.Log("ServerRpc çaðrýldý, oyuncu hasar alacak!");
 
         Vector3 dir = (transform.position - collisionPoint).normalized;
@@ -439,7 +473,7 @@ public class SnowboardController : NetworkBehaviour
 
     public void Shield()
     {
-
+        PlayTemporarySound(shieldActiveAudio);
         shield.SetActive(true);
         StartCoroutine(Coroutine());
 
@@ -455,6 +489,8 @@ public class SnowboardController : NetworkBehaviour
 
     public void Dash()
     {
+        PlayTemporarySound(dashSudio);
+
         isDashing = true;
 
         rb.AddForce(frontPoint.forward * dashForce, ForceMode.Impulse);
