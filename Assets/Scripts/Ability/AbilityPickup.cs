@@ -7,30 +7,21 @@ public class AbilityPickup : NetworkBehaviour
     [SerializeField] private AbilitySO abilitySO;
     [SerializeField] private SpriteRenderer sprite;
     [SerializeField] private GameObject sphere;
+    [SerializeField] private AudioClip pickUpAudio;
+
     Color originalColor;
 
     private AudioSource _audo;
-    [SerializeField] private AudioClip pickUpAudio;
+    
     public override void OnNetworkSpawn()
     {
-        if (IsServer)
-        {
-            Debug.Log("Sunucu bu objeyi yönetiyor.");
-        }
-        else if (IsClient)
-        {
-            Debug.Log("Ýstemci bu objeyi yönetiyor.");
-        }
-        else
-        {
-            Debug.Log("Bu obje herhangi bir taraf tarafýndan yönetilmiyor.");
-        }
     }
 
     private void Awake()
     {
         _audo = GetComponent<AudioSource>();
         sprite = transform.GetChild(0).GetComponent<SpriteRenderer>();
+
         if (sprite != null)
         {
             originalColor = sprite.color;
@@ -45,21 +36,21 @@ public class AbilityPickup : NetworkBehaviour
 
         if (!TryGetComponent(out NetworkObject networkObject))
         {
-            Debug.LogError("NetworkObject bulunamadý!");
+            Debug.LogError("NetworkObject not found!");
             return;
         }
         else
         {
-            Debug.Log("NetworkObject bulundu.");
+            Debug.Log("NetworkObject found.");
         }
 
         if (NetworkManager.Singleton == null)
         {
-            Debug.LogError("NetworkManager bulunamadý!");
+            Debug.LogError("NetworkManager not found!");
         }
         else if (!NetworkManager.Singleton.IsServer)
         {
-            Debug.LogError("Pickup yalnýzca sunucu tarafýndan kontrol edilmelidir!");
+            Debug.LogError("Pickup should be controlled by the server only!");
         }
     }
 
@@ -67,18 +58,16 @@ public class AbilityPickup : NetworkBehaviour
     {
         if (other.gameObject.CompareTag("Player"))
         {
-            Debug.Log("Player degdi");
 
             var networkObject = other.GetComponentInParent<NetworkObject>();
             if (networkObject != null)
             {
-                Debug.Log("Player'da netwkObject var");
+                Debug.Log("There is a netwkObject in the player");
                 int abilityID = abilitySO.number;
                 if (abilityID >= 0)
                 {
                     ulong clientId = networkObject.NetworkObjectId;
                     RequestAbilityPickupServerRpc(clientId, abilityID);
-                    Debug.Log("RequestAbilityPickupServerRpc cagirildi");
                 }
             }
             _audo.PlayOneShot(pickUpAudio);
@@ -88,65 +77,62 @@ public class AbilityPickup : NetworkBehaviour
     [ServerRpc(RequireOwnership = false)]
     private void RequestAbilityPickupServerRpc(ulong clientId, int abilityID)
     {
-        Debug.Log("RequestAbilityPickupServerRpc calisti");
+        Debug.Log("RequestAbilityPickupServerRpc");
 
-        Debug.Log($"ServerRpc çaðrýldý. ClientId: {clientId}, AbilityID: {abilityID}");
+        Debug.Log($"ServerRpc. ClientId: {clientId}, AbilityID: {abilityID}");
 
 
         NetworkObject playerNetworkObject = NetworkManager.Singleton.SpawnManager.SpawnedObjects[clientId];
         if (playerNetworkObject != null)
         {
             RequestAbilityPickupClientRpc(clientId, abilityID);
-            Debug.Log("RequestAbilityPickupClientRpc calisti");
         }
         else
         {
-            Debug.LogError("Oyuncu PlayerObject bulunamadý!");
+            Debug.LogError("PlayerObject not found!");
         }
     }
 
     [ClientRpc]
     private void RequestAbilityPickupClientRpc(ulong playerId, int abilityID)
     {
-        Debug.Log($"ClientRpc çaðrýldý. PlayerId: {playerId}, AbilityID: {abilityID}");
+        Debug.Log($"ClientRpc. PlayerId: {playerId}, AbilityID: {abilityID}");
 
-        // Oyuncuya yetenek ekleme iþlemi
+        // Adding skills to a player
         NetworkObject playerNetworkObject = NetworkManager.Singleton.SpawnManager.SpawnedObjects[playerId];
         if (playerNetworkObject != null)
         {
 
-            // Pickup nesnesini devre dýþý býrak
+            //Disable pickup object
             GrantAbilityToPlayer(playerNetworkObject, abilityID);
-            Debug.Log("GrantAbilityToPlayer cagirildi");
+            Debug.Log("GrantAbilityToPlayer");
 
         }
         else
         {
-            Debug.LogError("Oyuncu bulunamadý!");
+            Debug.LogError("PlayerObject not found!");
         }
     }
 
     private void GrantAbilityToPlayer(NetworkObject player, int abilityID)
     {
-        //if (!IsServer) return;
-
-        Debug.Log("GrantAbilityToPlayer calisti");
+        Debug.Log("GrantAbilityToPlayer");
 
         var playerAbilities = player.GetComponentInParent<PlayerAbilities>();
         if (playerAbilities != null)
         {
-            Debug.Log($"Player {abilityID} ID'li yeteneði aldý.");
+            Debug.Log($"Player received the ability with ID {abilityID}.");
             playerAbilities.AddAbility(abilityID);
-            DisablePickupServerRpc(); // Pickup nesnesini devre dýþý býrak.
+            DisablePickupServerRpc(); // Disable pickup object.
         }
 
         if (abilitySO.abilityName == "Dash")
         {
-            var snowboardController = player.GetComponentInParent<SnowboardController>();
-            if (snowboardController != null)
+            var abilityController = player.GetComponentInParent<Ability_Controller>();
+            if (abilityController != null)
             {
-                snowboardController.Dash();
-                Debug.Log("Dash yeteneði uygulandý.");
+                abilityController.Dash();
+                Debug.Log("Dash Ability implemented.");
                 playerAbilities.RemoveAbility(abilityID);
             }
         }
@@ -163,7 +149,6 @@ public class AbilityPickup : NetworkBehaviour
     {
         if (sprite != null)
         {
-            // Mevcut renk deðerini alýyoruz
             originalColor = sprite.color;
             sprite.color = new Color(originalColor.r, originalColor.g, originalColor.b, 0f);
         }
@@ -171,7 +156,7 @@ public class AbilityPickup : NetworkBehaviour
         sphere.SetActive(false);
         gameObject.GetComponent<Collider>().enabled = false;
 
-        // Pickup'u geri etkinleþtirme zamanlayýcýsýný yalnýzca server baþlatýr.
+        // Only the server starts the pickup re-enable timer.
         if (IsServer)
         {
             StartCoroutine(ReEnablePickupCoroutine());
@@ -195,7 +180,6 @@ public class AbilityPickup : NetworkBehaviour
     {
         if (sprite != null)
         {
-            // Mevcut renk deðerini alýyoruz
             originalColor = sprite.color;
             sprite.color = new Color(originalColor.r, originalColor.g, originalColor.b, 1f);
         }

@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Unity.Netcode;
@@ -7,8 +6,8 @@ public class NetworkedObjectPool : MonoBehaviour
 {
     public static NetworkedObjectPool Instance { get; private set; }
 
-    [SerializeField] private NetworkObject prefab; // NetworkObject mermi prefab'ý
-    [SerializeField] private int poolSize = 20;
+    [SerializeField] private NetworkObject prefab; // NetworkObject bullet prefab
+    [SerializeField] private int poolSize = 20; // Pool networkobject limit
 
     private Queue<NetworkObject> pool = new Queue<NetworkObject>();
 
@@ -16,7 +15,7 @@ public class NetworkedObjectPool : MonoBehaviour
     {
         Instance = this;
 
-        // Havuzu doldur
+        // Fill the pool
         for (int i = 0; i < poolSize; i++)
         {
             NetworkObject obj = Instantiate(prefab);
@@ -57,7 +56,7 @@ public class NetworkedObjectPool : MonoBehaviour
         {
             obj = pool.Dequeue();
 
-            // Eðer havuzdan alýnan obje yok edilmiþse, yeni bir tane oluþtur
+            // If the object taken from the pool is destroyed, create a new one
             if (obj == null)
             {
                 Debug.LogWarning("Destroyed object found in pool. Creating a new one...");
@@ -70,12 +69,12 @@ public class NetworkedObjectPool : MonoBehaviour
             obj = CreateNewObject();
         }
 
-        // Nesnenin pozisyonunu ve rotasyonunu ayarla
+        // Object position ve rotasion set
         obj.transform.position = position;
         obj.transform.rotation = rotation;
         obj.gameObject.SetActive(true);
 
-        // Eðer NetworkObject spawn edilmemiþse, spawn et
+        // If NetworkObject is not spawned, spawn it
         if (NetworkManager.Singleton.IsServer && !obj.IsSpawned)
         {
             obj.Spawn();
@@ -92,7 +91,7 @@ public class NetworkedObjectPool : MonoBehaviour
 
         if (NetworkManager.Singleton.IsServer)
         {
-            newObj.Spawn(); // Sadece server'da spawn et
+            newObj.Spawn(); // Only spawn on server
         }
 
         return newObj;
@@ -108,10 +107,10 @@ public class NetworkedObjectPool : MonoBehaviour
 
         if (NetworkManager.Singleton.IsServer && obj.IsSpawned)
         {
-            obj.Despawn(); // Network spawn'ý kapat
+            obj.Despawn(); // Object despawn
         }
 
-        obj.gameObject.SetActive(false); // Nesneyi devre dýþý býrak
+        obj.gameObject.SetActive(false); // Object disabled
         pool.Enqueue(obj);
     }
 }

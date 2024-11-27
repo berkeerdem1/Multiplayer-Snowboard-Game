@@ -7,7 +7,7 @@ public class JoinRelay_UI : MonoBehaviour
 {
     [SerializeField] private InputField joinCodeInputField;
     [SerializeField] private Button joinButton;
-    [SerializeField] private RelayManager relayManager; // GameObject'teki bir script, Relay yönetimi için.
+    [SerializeField] private RelayManager relayManager; 
 
     private void Start()
     {

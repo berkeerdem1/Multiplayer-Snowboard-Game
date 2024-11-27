@@ -1,13 +1,10 @@
-using System.Collections;
-using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 
 public class AbilitySpawner : NetworkBehaviour
 {
     [SerializeField] private GameObject[] abilityPrebafs;
-    [SerializeField]
-    private Transform[] spawnPositions;
+    [SerializeField] private Transform[] spawnPositions;
 
 
     void Start()
@@ -22,7 +19,7 @@ public class AbilitySpawner : NetworkBehaviour
     {
         if (NetworkManager.Singleton.IsServer)
         {
-            Debug.Log("Sunucu baþlatýldý, objeler spawn ediliyor.");
+            Debug.Log("Server started, objects spawning.");
             SpawnObjects();
         }
     }
@@ -38,18 +35,18 @@ public class AbilitySpawner : NetworkBehaviour
 
                 if (networkObject != null)
                 {
-                    networkObject.Spawn(); // Sunucu tarafýnda spawn iþlemi
-                    Debug.Log("Obje spawn edildi.");
+                    networkObject.Spawn();
+                    Debug.Log("Object spawned.");
                 }
                 else
                 {
-                    Debug.LogError("Prefab'da NetworkObject bileþeni bulunamadý.");
+                    Debug.LogError("NetworkObject component not found in Prefab.");
                 }
             }
         }
         else
         {
-            Debug.LogError("Spawn edilecek prefab atanmadý.");
+            Debug.LogError("Prefab to be spawned is not assigned.");
         }
     }
 

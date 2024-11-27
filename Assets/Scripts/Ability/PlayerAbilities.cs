@@ -1,13 +1,12 @@
-using System.Collections;
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 
 public class PlayerAbilities : NetworkBehaviour
 {
-    public AbilitySO[] allAbilities; // Tüm yeteneklerin ScriptableObject referanslarý
+    public AbilitySO[] allAbilities;
     [SerializeField] private List<int> abilityNumbs = new List<int>();
-    [SerializeField] private List<int> abilityIDs = new List<int>(); // Yetenek ID'lerini senkronize ediyoruz. //
+    [SerializeField] private List<int> abilityIDs = new List<int>(); // Synchronizing talent IDs.//
 
     private void Awake()
     {
@@ -22,11 +21,11 @@ public class PlayerAbilities : NetworkBehaviour
         if (!abilityIDs.Contains(abilityID))
         {
             abilityIDs.Add(abilityID);
-            Debug.Log($"Yetenek ID {abilityID} oyuncuya eklendi.");
+            Debug.Log($"Ability ID {abilityID} added to player.");
         }
         else
         {
-            Debug.Log($"Yetenek ID {abilityID} zaten eklenmiþti.");
+            Debug.Log($"Ability ID {abilityID} has already been added.");
         }
     }
 
@@ -42,7 +41,7 @@ public class PlayerAbilities : NetworkBehaviour
             return allAbilities[abilityID];
         }
 
-        Debug.LogWarning("Geçersiz yetenek ID'si!");
+        Debug.LogWarning("Invalid skill ID!");
         return null;
     }
 
@@ -52,7 +51,7 @@ public class PlayerAbilities : NetworkBehaviour
         {
             abilityIDs.Remove(abilityID);
             
-            Debug.Log($"Yetenek ID {abilityID} oyuncudan kaldýrýldý.");
+            Debug.Log($"Ability ID {abilityID} has been removed from player.");
         }
         abilityNumbs.Remove(abilityID);
     }

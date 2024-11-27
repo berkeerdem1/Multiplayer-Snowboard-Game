@@ -1,33 +1,29 @@
-using System.Collections;
 using System.Collections.Generic;
-using Unity.Collections;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.UI;
-using Unity.Netcode;
 using DG.Tweening;
-using TMPro;
-
 
 public class UI_Manager : MonoBehaviour
 {
     public static UI_Manager Instance;
 
-    public GameObject nicknamePanel;   // Nickname'lerin gösterileceði panel
-    public GameObject nicknamePrefab; // Her oyuncu için oluþturulacak Text prefab'i
+    public GameObject nicknamePanel;   // Nicknames panel
+    public GameObject nicknamePrefab; // Text prefab to be created for each player
 
-    [SerializeField] private GameObject pausePanel;
-    [SerializeField] private GameObject leaveServerButton;
-    [SerializeField] private GameObject controlsPanel;
-    [SerializeField] private GameObject title;
-    [SerializeField] private RectTransform titleObject;
-    [SerializeField] private Transform targetPos;
-    [SerializeField] private float duration = 1f;
+    [SerializeField] private GameObject _playButton;
+    [SerializeField] private GameObject _pausePanel;
+    [SerializeField] private GameObject _leaveServerButton;
+    [SerializeField] private GameObject _controlsPanel;
+    [SerializeField] private GameObject _title; // Game title
+    [SerializeField] private RectTransform _titleObject;
+    [SerializeField] private Transform _titleTargetPos; // Game title
+    [SerializeField] private float _duration = 1f;
 
-   private List<GameObject> nicknameObjects = new List<GameObject>();
-
-
+    private List<GameObject> _nicknameObjects = new List<GameObject>();
+    
     GameObject newNickname;
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -42,11 +38,12 @@ public class UI_Manager : MonoBehaviour
 
     private void Start()
     {
-        nicknamePanel.SetActive(false);
-        pausePanel.SetActive(false);
-        controlsPanel.SetActive(false);
-        InvokeRepeating(nameof(UpdateNicknamePanel), 0f, 5f); // 5 saniyede bir paneli güncelle
-        MoveUIObject();
+        UIObjectsDisabled();
+
+        _playButton.SetActive(true); // To turn the play button back on after all UI objects are closed
+
+        InvokeRepeating(nameof(UpdateNicknamePanel), 0f, 5f); // Update panel every 5 seconds
+        MoveTitle();
     }
 
     private void Update()
@@ -57,105 +54,115 @@ public class UI_Manager : MonoBehaviour
         }
     }
 
-    void MoveUIObject()
+    void MoveTitle()
     {
-        // Dünya pozisyonunu (world position) anchor pozisyona dönüþtür
-        Vector2 targetAnchorPos = titleObject.parent.InverseTransformPoint(targetPos.position);
-
-        // UI objesini anchor pozisyonuna taþý
-        titleObject.DOAnchorPos(targetAnchorPos, duration).SetEase(Ease.InOutElastic);
+        Vector2 targetAnchorPos = _titleObject.parent.InverseTransformPoint(_titleTargetPos.position);
+        _titleObject.DOAnchorPos(targetAnchorPos, _duration).SetEase(Ease.InOutElastic);
     }
 
     public void ToggleTitle()
     {
-        title.SetActive(!title.activeSelf);
+        _title.SetActive(!_title.activeSelf);
 
     }
-    public void ControlsButton()
+    public void ControlsButton() // Controls button
     {
         ToggleContolsPanel();
     }
 
-    public void ReturnPausePanelButton()
+    public void ReturnPausePanelButton() // Return button
     {
         ToggleContolsPanel();
     }
 
     private void ToggleContolsPanel()
     {
-        controlsPanel.SetActive(!controlsPanel.activeSelf);
+        _controlsPanel.SetActive(!_controlsPanel.activeSelf);
     }
 
     private void TogglePausePanel()
     {
-        pausePanel.SetActive(!pausePanel.activeSelf);
+        _pausePanel.SetActive(!_pausePanel.activeSelf);
     }
 
-    public void LeaveServerButton()
+    public void PlayGame()
+    {
+        _playButton.SetActive(false);
+        Nickname_Manager.Instance.PlayGameUISet();
+    }
+
+    public void LeaveServerButton() // Main Menu (leave thr server) button
     {
         if (NetworkManager.Singleton != null)
         {
             NetworkManager.Singleton.Shutdown();
-            // Oyuncunun baðlantýsýný kes
+            // Disconnect player
 
-            Debug.Log("Oyuncu serverdan ayrýldý.");
-            pausePanel.SetActive(false);
+            Debug.Log("Player left the server.");
+            _pausePanel.SetActive(false);
             Nickname_Manager.Instance.ResetPanels();
             ToggleTitle();
             GameManager.Instance.isInGame = false;
         }
         else
         {
-            Debug.LogError("NetworkManager mevcut deðil!");
+            Debug.LogError("NetworkManager not available!");
         }
-
-        // Oyuncunun ana menüye yönlendirilmesi gibi baþka iþlemler
-        // SceneManager.LoadScene("MainMenu");
     }
 
-    public void QuitButton()
+    public void QuitButton() // Quit button
     {
         if (NetworkManager.Singleton != null)
         {
             NetworkManager.Singleton.Shutdown();
             GameManager.Instance.isInGame = false;
-            Debug.Log("Oyuncu oyundan cikti.");
-            pausePanel.SetActive(false);
+
+            Debug.Log("Player left the GAME.");
+
+            _pausePanel.SetActive(false);
             Application.Quit();
         }
         else
         {
-            Debug.LogError("NetworkManager mevcut deðil!");
+            Debug.LogError("NetworkManager not available!");
         }
+    }
 
-        // Oyuncunun ana menüye yönlendirilmesi gibi baþka iþlemler
-        // SceneManager.LoadScene("MainMenu");
+    public void ToggleNicknamePanel()
+    {
+        nicknamePanel.SetActive(!nicknamePanel.activeSelf);
+    }
+
+    public void RemovePlayerNickName(GameObject player)
+    {
+        _nicknameObjects.Remove(player);
+        Destroy(newNickname);
     }
 
     public void UpdateNicknamePanel()
     {
         if (PlayersNickname_Controller.Instance == null)
         {
-            Debug.Log("PlayerManager mevcut deðil, panel güncellenemedi!");
+            Debug.Log("PlayerManager not available, panel update failed!");
             return; 
         }
 
         var nicknames = PlayersNickname_Controller.Instance.GetAllNicknames();
 
-        Debug.Log("Panel güncelleniyor. Nickname'ler:");
+        Debug.Log("Updating the panel. Nicknames:");
         foreach (var nickname in nicknames)
         {
-            Debug.Log(nickname); // Panelde gösterilecek tüm nickname'leri kontrol et
+            Debug.Log(nickname); // Control all nicknames to be displayed on the panel
         }
 
-        // Eski nickname'leri temizle
-        foreach (var obj in nicknameObjects)
+        // Clear old nicknames
+        foreach (var obj in _nicknameObjects)
         {
             Destroy(obj);
         }
-        nicknameObjects.Clear();
+        _nicknameObjects.Clear();
 
-        // Yeni nickname'leri ekle
+        // New nicknames add
         foreach (var nickname in nicknames)
         {
             if (newNickname != null)
@@ -164,7 +171,7 @@ public class UI_Manager : MonoBehaviour
             }
             newNickname = Instantiate(nicknamePrefab, nicknamePanel.transform);
 
-            // Eðer bu nickname oyuncunun kendisine aitse "(You)" ekle
+            // If this nickname belongs to the player, add "(You)"
             if (nickname == Nickname_Manager.Instance.nickname)
             {
                 newNickname.GetComponent<Text>().text = $"{nickname} (You)";
@@ -174,21 +181,17 @@ public class UI_Manager : MonoBehaviour
                 newNickname.GetComponent<Text>().text = nickname;
             }
 
-            nicknameObjects.Add(newNickname);
+            _nicknameObjects.Add(newNickname);
         }
 
-        Debug.Log($"Panelde toplam {nicknameObjects.Count} oyuncu gösteriliyor."); // Paneldeki toplam nickname sayýsýný yazdýr
+        Debug.Log($"The panel shows a total of {_nicknameObjects.Count} players."); // Print total number of nicknames in panel
     }
 
-    public void ToggleNicknamePanel()
+    public void UIObjectsDisabled()
     {
-        // Panelin aktiflik durumunu deðiþtir
-        nicknamePanel.SetActive(!nicknamePanel.activeSelf);
-    }
-
-    public void RemovePlayerNickName(GameObject player)
-    {
-        nicknameObjects.Remove(player);
-        Destroy(newNickname);
+        nicknamePanel.SetActive(false);
+        _pausePanel.SetActive(false);
+        _controlsPanel.SetActive(false);
+        _playButton.SetActive(false);
     }
 }

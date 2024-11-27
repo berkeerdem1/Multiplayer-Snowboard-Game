@@ -1948,37 +1948,6 @@ Transform:
   - {fileID: 2766511674571508881}
   m_Father: {fileID: 4547679512064612223}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &5351934604795725061
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 5569237387056075517}
-  m_Layer: 0
-  m_Name: GameObject
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &5569237387056075517
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5351934604795725061}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 2.24, z: 0}
-  m_LocalScale: {x: 6.7999997, y: 6.7999997, z: 6.7999997}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 3239467643000304884}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &5432664399007971375
 GameObject:
   m_ObjectHideFlags: 0
@@ -2031,6 +2000,8 @@ GameObject:
   - component: {fileID: 971082205805945140}
   - component: {fileID: 2925232364961866066}
   - component: {fileID: 2156240911162724007}
+  - component: {fileID: 8673498859763167354}
+  - component: {fileID: 5970929225786340231}
   - component: {fileID: 7913133265977989906}
   m_Layer: 0
   m_Name: Snowboard 5
@@ -2057,7 +2028,6 @@ Transform:
   - {fileID: 504990859901560622}
   - {fileID: 1072534040515119075}
   - {fileID: 4027166153686924832}
-  - {fileID: 5569237387056075517}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &5052039708133643835
@@ -2191,7 +2161,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f03fb54622369d04bbda62a54a63709d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  frontPoint: {fileID: 5227044067426869131}
+  throttle: 0
   acceleration: 500
   maxAcceleration: 2000
   steering: 100
@@ -2204,26 +2174,16 @@ MonoBehaviour:
   maxDrag: 1.5
   gravityScale: 10
   slopeSlideStrength: 5
-  CameraPrefab: {fileID: 8069668948580143406, guid: c8bdcafd803de1a448883b8a2d70acb9, type: 3}
-  firePoint: {fileID: 504990859901560622}
-  bullerPrefab: {fileID: 7643055386187393687, guid: 09077c54645a8be47b55009e4c31f6c1, type: 3}
-  bulletSpeed: 45
-  shield: {fileID: 3944791908337048490}
-  dashForce: 80
-  dashDuration: 2
+  SetFlippingState: 0
   jumpForce: 10
-  dashSudio: {fileID: 8300000, guid: c7a0c07b3ebcebf40984d200a8ec7016, type: 3}
-  shieldActiveAudio: {fileID: 8300000, guid: f35abba25b5fa9f4c9953d0c65b127e5, type: 3}
-  hurtAudio: {fileID: 8300000, guid: 7bea80a5b49d8d845adb4b000eecee88, type: 3}
-  audio: {fileID: 7913133265977989906}
-  maxVolume: 1
-  volumeChangeRate: 2
-  playInterval: 0.2
   groundCheckDistance: 3
   groundLayer:
     serializedVersion: 2
     m_Bits: 8
-  SetFlippingState: 0
+  frontPoint: {fileID: 5227044067426869131}
+  CameraPrefab: {fileID: 8069668948580143406, guid: c8bdcafd803de1a448883b8a2d70acb9, type: 3}
+  bulletSpeed: 45
+  shield: {fileID: 3944791908337048490}
 --- !u!114 &4355276497485726021
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2263,9 +2223,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 38f54c727007fae41bf2065d7382e64f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  player: {fileID: 5411585925978676872}
-  playerDefaultLocalPosition: {x: 0, y: 0, z: 0}
-  playerDefaultLocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  characterTransform: {fileID: 5411585925978676872}
   rotationLerpSpeed: 30
   playerOffset: {x: 0, y: -0.1, z: -0.6}
   playerShieldOffset: {x: 0, y: 1, z: 0}
@@ -2331,6 +2289,46 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c65b4e06679404049860db8a0bb5b79d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  bulletCount: 6
+  highJumpCount: 8
+--- !u!114 &8673498859763167354
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5745605197875668141}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 55fb3582a79c7b3448c02f6434f987bd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  frontPoint: {fileID: 5227044067426869131}
+  firePoint: {fileID: 504990859901560622}
+  bulletPrefab: {fileID: 7643055386187393687, guid: 09077c54645a8be47b55009e4c31f6c1, type: 3}
+  bulletSpeed: 65
+  shield: {fileID: 3944791908337048490}
+  dashForce: 60
+  dashDuration: 2
+  jumpForce: 25
+  gravityScale: 1
+  dashSudio: {fileID: 8300000, guid: c7a0c07b3ebcebf40984d200a8ec7016, type: 3}
+  shieldActiveAudio: {fileID: 8300000, guid: f35abba25b5fa9f4c9953d0c65b127e5, type: 3}
+  hurtAudio: {fileID: 8300000, guid: 7bea80a5b49d8d845adb4b000eecee88, type: 3}
+--- !u!114 &5970929225786340231
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5745605197875668141}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 17662bebbcaa6bd418070a0b6923c638, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  volumeChangeRate: 2
+  maxVolume: 1
 --- !u!82 &7913133265977989906
 AudioSource:
   m_ObjectHideFlags: 0
@@ -2750,7 +2748,7 @@ GameObject:
   - component: {fileID: 7749658381449285850}
   - component: {fileID: 3930086371382628695}
   m_Layer: 0
-  m_Name: character1
+  m_Name: character
   m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

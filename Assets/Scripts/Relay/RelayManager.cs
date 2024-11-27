@@ -3,14 +3,15 @@ using Unity.Services.Relay;
 using Unity.Services.Relay.Models;
 using Unity.Netcode.Transports.UTP;
 using UnityEngine;
-using Unity.Services.Core; // Unity Services'ý baþlatmak için
+using Unity.Services.Core; // To start Unity Services
 using Unity.Services.Authentication;
-using UnityEngine.UI; // Oyun oturumlarýný kimlik doðrulamasý ile baþlatmak için
+using UnityEngine.UI;
 
 public class RelayManager : MonoBehaviour
 {
     [SerializeField] private Text joinCodeText;
     [SerializeField] private GameObject otherButtonsPanel;
+
     private async void Start()
     {
         await UnityServices.InitializeAsync();
@@ -57,6 +58,8 @@ public class RelayManager : MonoBehaviour
             Debug.Log(e);
         }
 
+        // UI interactions and checking if Game Manager is in game
+
         otherButtonsPanel.SetActive(false);
         UI_Manager.Instance.ToggleTitle();
         GameManager.Instance.isInGame = true;
@@ -69,9 +72,6 @@ public class RelayManager : MonoBehaviour
             Debug.Log("Joining Relay With" + joinCode);
 
             JoinAllocation joinAllLocation = await RelayService.Instance.JoinAllocationAsync(joinCode);
-
-            //RelayServerData relayServerData = new RelayServerData(joinAllLocation, "dtls");
-            //NetworkManager.Singleton.GetComponent<UnityTransport>().SetRelayServerData(relayServerData);
 
             NetworkManager.Singleton.GetComponent<UnityTransport>().SetClientRelayData(
                 joinAllLocation.RelayServer.IpV4,
@@ -98,6 +98,7 @@ public class RelayManager : MonoBehaviour
             Debug.LogError("Failed to join the game. Reason: " + e.Message);
         }
 
+        // UI interactions and checking if Game Manager is in game
         otherButtonsPanel.SetActive(false);
         UI_Manager.Instance.ToggleTitle();
         GameManager.Instance.isInGame = true;

@@ -1,16 +1,15 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
-
     public static GameManager Instance;
 
-    private AudioSource _audio;
+    public bool isInGame = false; // In the game control
+
     [SerializeField] private AudioClip _startAudio, _background;
 
-    public bool isInGame = false;
+    private AudioSource _audio;
 
     private void Awake()
     {
@@ -30,7 +29,7 @@ public class GameManager : MonoBehaviour
         StartCoroutine(Coroutine());
     }
 
-    IEnumerator Coroutine()
+    IEnumerator Coroutine() // Main menu start music and Background music control
     {
         _audio.clip = _startAudio;
         _audio.volume = 0.4f;
@@ -41,7 +40,7 @@ public class GameManager : MonoBehaviour
 
         _audio.clip = _background;
         _audio.loop = true; 
-        _audio.volume = 0.2f;
+        _audio.volume = 0.15f;
         _audio.Play();
     }
 }

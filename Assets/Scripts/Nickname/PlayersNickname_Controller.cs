@@ -28,7 +28,7 @@ public class PlayersNickname_Controller : NetworkBehaviour
         if (IsServer)
         {
             playerNicknames.OnListChanged += OnPlayerNicknamesChanged;
-            InvokeRepeating(nameof(CheckForNewPlayers), 0f, 5f); // 5 saniyede bir oyuncularý kontrol et
+            InvokeRepeating(nameof(CheckForNewPlayers), 0f, 5f); // Check players every 5 seconds
         }
     }
 
@@ -41,7 +41,7 @@ public class PlayersNickname_Controller : NetworkBehaviour
 
     private void OnPlayerNicknamesChanged(NetworkListEvent<FixedString32Bytes> changeEvent)
     {
-        // Nickname deðiþimlerini UI_Manager'a bildir
+        // Notify UI_Manager of nickname changes
         if (UI_Manager.Instance != null)
         {
             UI_Manager.Instance.UpdateNicknamePanel();
@@ -54,24 +54,24 @@ public class PlayersNickname_Controller : NetworkBehaviour
         {
             if (!playerNicknames.Contains(nickname))
             {
-                playerNicknames.Add(nickname); // Sunucu tarafýnda listeye ekle
-                Debug.Log($"Nickname eklendi: {nickname}"); // Nickname ekleme iþlemini kontrol et
+                playerNicknames.Add(nickname); //Add to list on server side
+                Debug.Log($"Nickname added: {nickname}"); // Check the nickname addition process
             }
             else
             {
-                Debug.Log($"Nickname zaten mevcut: {nickname}"); // Eðer zaten eklenmiþse bilgi ver
+                Debug.Log($"Nickname already exists: {nickname}"); // If already added, let me know
             }
         }
     }
 
     private void CheckForNewPlayers()
     {
-        // Oyundaki tüm oyuncularý kontrol et
+        // Control all players in the game
         foreach (var player in FindObjectsOfType<PlayerNicknameDisplay>())
         {
             if (!playerNicknames.Contains(player.GetNickname()))
             {
-                // Eðer oyuncu listede yoksa ekle
+                // If the player is not on the list, add player
                 playerNicknames.Add(player.GetNickname());
             }
         }
@@ -79,17 +79,17 @@ public class PlayersNickname_Controller : NetworkBehaviour
 
     public IEnumerable<string> GetAllNicknames()
     {
-        // Tüm oyuncu nicknamelerini döndür
+        // Return all player nicknames
         List<string> nicknames = new List<string>();
         foreach (var nickname in playerNicknames)
         {
             nicknames.Add(nickname.ToString());
         }
 
-        Debug.Log("Tüm nickname'ler:");
+        Debug.Log("All nicknames:");
         foreach (var name in nicknames)
         {
-            Debug.Log(name); // Listeye eklenen tüm nickname'leri yazdýr
+            Debug.Log(name); // Print all nicknames added to the list
         }
 
         return nicknames;

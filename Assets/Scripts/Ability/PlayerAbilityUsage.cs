@@ -3,35 +3,38 @@ using UnityEngine;
 
 public class PlayerAbilityUsage : NetworkBehaviour
 {
-    private PlayerAbilities playerAbilities;
-    private SnowboardController snowboard;
+    // Ability limits
+    [SerializeField] private int bulletCount = 6;
+    [SerializeField] private int highJumpCount = 8;
 
-    // Yetenek limitleri
-    private int bulletCount = 6;
-    private int highJumpCount = 8;
+    private PlayerAbilities _playerAbilities;
+    private Ability_Controller _myAbilityController;
+    private SnowboardController _mySnowboard;
 
     private void Start()
     {
-        playerAbilities = GetComponent<PlayerAbilities>();
-        snowboard = GetComponent<SnowboardController>();
+        _playerAbilities = GetComponent<PlayerAbilities>();
+        _myAbilityController = GetComponent<Ability_Controller>();
+        _mySnowboard = GetComponent<SnowboardController>();
     }
 
     private void Update()
     {
-        if (!IsOwner) return; // Sadece yerel oyuncu kontrolleri uygulasýn
+        if (!IsOwner) return; // Only apply local player controls
 
-        // Yeteneklerin kullanýmý
-        if (Input.GetMouseButtonDown(0))
+        // Use of abilities
+
+        if (Input.GetMouseButtonDown(0)) // Shoot 
         {
             UseAbility(1);
         }
 
-        if (Input.GetKeyDown(KeyCode.C))
+        if (Input.GetKeyDown(KeyCode.C)) // Shield
         {
             UseAbility(2);
         }
 
-        if (Input.GetKeyDown(KeyCode.Space) && snowboard.CheckGround())
+        if (Input.GetKeyDown(KeyCode.Space) && _mySnowboard.CheckGround()) // High jump
         {
             UseAbility(3);
         }
@@ -39,25 +42,26 @@ public class PlayerAbilityUsage : NetworkBehaviour
 
     private void UseAbility(int abilityNumber)
     {
-        if (playerAbilities.HasAbility(abilityNumber))
+        if (_playerAbilities.HasAbility(abilityNumber))
         {
-            Debug.Log($"{abilityNumber} kullanýldý, Player ID: {OwnerClientId}");
+            Debug.Log($"{abilityNumber} used, Player ID: {OwnerClientId}");
             UseAbilityManager(abilityNumber);
         }
         else
         {
-            Debug.Log($"Player {OwnerClientId} yeteneði yok: {abilityNumber}");
+            Debug.Log($"Player {OwnerClientId} no ability: {abilityNumber}");
         }
     }
+
     private void UseAbilityManager(int abilityNumb)
     {
-        if (!playerAbilities.HasAbility(abilityNumb))
+        if (!_playerAbilities.HasAbility(abilityNumb))
         {
-            Debug.LogWarning($"Player {OwnerClientId}, {abilityNumb} yeteneðine sahip deðil!");
+            Debug.LogWarning($"Player {OwnerClientId}, {abilityNumb} does not have this ability!");
             return;
         }
 
-        Debug.Log($"Server: {abilityNumb} yeteneði aktif edildi, Player ID: {OwnerClientId}");
+        Debug.Log($"Server: {abilityNumb} ability activated, Player ID: {OwnerClientId}");
 
         // Yetenekler üzerinde iþlem yap
         switch (abilityNumb)
@@ -75,55 +79,51 @@ public class PlayerAbilityUsage : NetworkBehaviour
                 break;
 
             default:
-                Debug.LogWarning($"Bilinmeyen yetenek: {abilityNumb}");
+                Debug.LogWarning($"Unknown ability: {abilityNumb}");
                 break;
         }
     }
 
-    // "Bullet" yeteneði iþlemleri
+    // "Bullet" ability process
     private void HandleBulletAbility()
     {
         if (bulletCount > 0)
         {
-            snowboard.Shoot();
+            _myAbilityController.Shoot();
             bulletCount--;
-
-            Debug.Log($"Kalan mermi: {bulletCount}");
         }
 
         if (bulletCount == 0)
         {
-            Debug.Log("Mermiler bitti, yetenek kaldýrýlýyor.");
-            playerAbilities.RemoveAbility(1);
-            bulletCount = 3; // Yeniden dolum için
+            Debug.Log("Bullets end, Shoot ability is being removed.");
+            _playerAbilities.RemoveAbility(1);
+            bulletCount = 3; 
         }
     }
 
-    // "Shield" yeteneði iþlemleri
+    // "Shield" ability process
     private void HandleShieldAbility()
     {
-        snowboard.Shield();
-        Debug.Log("Shield etkinleþtirildi.");
-        playerAbilities.RemoveAbility(2);
+        _myAbilityController.Shield();
+        Debug.Log("Shield activated.");
+        _playerAbilities.RemoveAbility(2);
     }
 
-    // "HighJump" yeteneði iþlemleri
+    // "HighJump"  ability process
     private void HandleHighJumpAbility()
     {
         if (highJumpCount > 0)
         {
-            snowboard.HighJump();
+            _myAbilityController.HighJump();
             highJumpCount--;
-
-            Debug.Log($"Kalan zýplama: {highJumpCount}");
         }
 
         if (highJumpCount == 0)
         {
-            Debug.Log("Zýplama hakký bitti, yetenek kaldýrýlýyor.");
-            snowboard.InitialJump();
-            playerAbilities.RemoveAbility(3);
-            highJumpCount = 5; // Yeniden dolum için
+            Debug.Log("High jump end, ability is being removed.");
+            _myAbilityController.InitialJump();
+            _playerAbilities.RemoveAbility(3);
+            highJumpCount = 5;
         }
     }
 }

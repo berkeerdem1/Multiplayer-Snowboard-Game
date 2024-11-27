@@ -1,13 +1,12 @@
 using System.Collections;
-using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 
 public class Bullett : NetworkBehaviour
 {
 
-    private float lifeTimer = 8F;
-    [SerializeField] private AudioClip shieldDamageAudio;
+    [SerializeField] private float _lifeTimer = 8F;
+    [SerializeField] private AudioClip _shieldDamageAudio;
     private AudioSource _audio;
 
 
@@ -23,17 +22,18 @@ public class Bullett : NetworkBehaviour
 
     private void OnTriggerEnter(Collider collision)
     {
-        if (!IsServer) return; // Çarpýþmayý yalnýzca sunucu kontrol eder
+        if (!IsServer) return; // Only the server controls the collision
 
-        var player = collision.gameObject.GetComponentInParent<SnowboardController>();
+        var player = collision.gameObject.GetComponentInParent<Ability_Controller>();
 
         if (player != null)
         {
-            Debug.Log("Mermi: Oyuncuya Deðdim!");
-            Vector3 hitPoint = collision.ClosestPoint(transform.position);
-            player.BulletDamageServerRpc(hitPoint); // Oyuncuya hasar ver
+            Debug.Log("Bullet: I Touched the Player!");
 
-            Debug.Log("Mermi: Oyuncuya hasar verme fonksiyonunu cagirdim!");
+            Vector3 hitPoint = collision.ClosestPoint(transform.position);
+            player.BulletDamageServerRpc(hitPoint); // Damage to player
+
+            Debug.Log("Bullet: I called the damage function to the player!");
 
             ReturnToPool();
 
@@ -47,11 +47,13 @@ public class Bullett : NetworkBehaviour
             //}
         }
 
-        if (collision.gameObject.CompareTag("Shield")) // Çarptýðý nesne bir kalkan ise
+        if (collision.gameObject.CompareTag("Shield"))
         {
             _audio.Stop();
-            _audio.PlayOneShot(shieldDamageAudio);
-            Debug.Log("Mermi: Kalkana Deðdim!");
+            _audio.PlayOneShot(_shieldDamageAudio);
+
+            Debug.Log("Bullet: I Touched the Shield!");
+
             ReturnToPool();
         }
     }
@@ -61,9 +63,9 @@ public class Bullett : NetworkBehaviour
         NetworkedObjectPool.Instance.ReturnToPool(GetComponent<NetworkObject>());
     }
 
-    IEnumerator Lifetime()
+    IEnumerator Lifetime() // Bullet life time
     {
-        yield return new WaitForSeconds(lifeTimer);
+        yield return new WaitForSeconds(_lifeTimer);
 
         ReturnToPool();
 

@@ -2,20 +2,17 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using Unity.Netcode;
 
 public class Nickname_Manager : MonoBehaviour
 {
     public static Nickname_Manager Instance { get; private set; }
 
+    public string nickname;
+
     [SerializeField] private InputField nicknameInputField;
     [SerializeField] private GameObject nicknamePanel;      
     [SerializeField] private GameObject otherButtonsPanel;
-    [SerializeField] private GameObject playButton;
-    public string nickname;
-
-    [SerializeField]
-    private Text ownerNicknameTestPos;
+    [SerializeField] private Text ownerNicknameTestPos;
 
     private void Awake()
     {
@@ -25,12 +22,6 @@ public class Nickname_Manager : MonoBehaviour
     {
         nicknamePanel.SetActive(false);
         otherButtonsPanel.SetActive(false);
-    }
-
-    public void PlayGame()
-    {
-        playButton.SetActive(false);
-        nicknamePanel.SetActive(true);
     }
 
     public void SaveNickname()
@@ -56,6 +47,11 @@ public class Nickname_Manager : MonoBehaviour
     {
         otherButtonsPanel.SetActive(true);
         nicknamePanel.SetActive(false);
-        playButton.SetActive(false);
+        UI_Manager.Instance.UIObjectsDisabled();
+    }
+
+    public void PlayGameUISet()
+    {
+        nicknamePanel.SetActive(true);
     }
 }
