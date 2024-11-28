@@ -19,3 +19,5 @@
   - Snowboard Models Asset Pack: https://assetstore.unity.com/packages/3d/props/tools/low-poly-casual-snow-board-287971
   - Character Models Asset Pack: https://assetstore.unity.com/packages/3d/characters/humanoids/character-pack-lowpoly-free-221766
   - Skybox: https://assetstore.unity.com/packages/tools/generative-ai/skybox-ai-generator-by-blockade-labs-subscription-274237
+ 
+ - Play the game on itch.io: https://keplers-orbit.itch.io/slide-me
